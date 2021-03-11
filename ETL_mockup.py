@@ -1,5 +1,6 @@
 
 import pandas as pd
+import numpy as np
 
 
 # Import CSV data
@@ -9,13 +10,8 @@ def read_data(path_to_csv):
 
 # Remove unused columns (at least for now)
 def delete_unused_columns(df):
-    return df.drop(columns=['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID', 'Temperature,C','Signal,mV', 'Is Duplicate'])
-
-
-# Remove date of datetime objects with an incorrect date
-# Note: As a consequence, it becomes an object instead of datetime64[ns]
-def remove_date_from_datetime(column):
-    df[column] = pd.to_datetime(df[column], format='%H:%M:%S').dt.time
+    return df.drop(columns=['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
+                            'Temperature,C','Signal,mV', 'Is Duplicate'])
 
 
 # Round milliseconds to seconds (OPTION 1)
@@ -64,14 +60,30 @@ df = remove_duplicates(df)
 # Create dataframes for each antenna
 antennas_dfs = create_antennas_dfs(df)
 
-# For now, JUST DATAFRAME ANTENNA 1:
-# Create time delta by subtracting "Scan Time" rows
-antennas_dfs[0]['Time Delta (s)'] = (antennas_dfs[0]['Scan Date_Scan Time'] - antennas_dfs[0]['Scan Date_Scan Time'].shift(1)).astype('timedelta64[s]')
+# For now, WE WILL WORK JUST ON DATAFRAME "ANTENNA 1":
+antenna_1 = antennas_dfs[0]
+
+# Sort using DEC tag ID so the time delta is correctly calculated
+antenna_1 = antenna_1.sort_values(by=['DEC Tag ID', 'Scan Date_Scan Time'])
+
+# Calculate time delta by subtracting "Scan Time" rows
+antenna_1['Time Delta'] = (antenna_1['Scan Date_Scan Time'] -
+                           antenna_1['Scan Date_Scan Time'].shift(1)).astype('timedelta64[s]')
+
+# TODO Calculate visit duration
+# Right now this only returns the time delta if is a valid visit, the sum has to be done
+min_visit_time = 7  # 7 seconds, arbitrary value
+
+antenna_1['Visit Duration'] = np.where((antenna_1['Time Delta'] <= min_visit_time) &
+                                       (antenna_1['DEC Tag ID'] == antenna_1['DEC Tag ID'].shift(1)),
+                                       antenna_1['Time Delta'], 0)
+
 
 # Reorder the columns
-antennas_dfs[0] = antennas_dfs[0][['Scan Date_Scan Time', 'Time Delta (s)', 'Antenna ID', 'DEC Tag ID']]
+antenna_1 = antenna_1[['DEC Tag ID', 'Scan Date_Scan Time', 'Time Delta', 'Visit Duration', 'Antenna ID']]
 
 # Print the dataframe and the dtypes of each column
 print(df.dtypes)
 print(df)
-print(antennas_dfs[0])
+print(antenna_1.dtypes)
+print(antenna_1)
