@@ -3,6 +3,9 @@ import numpy as np
 from time import time
 
 
+MINIMUM_VISIT_TIME = 7  # 7 seconds, arbitrary value
+
+
 # Import CSV data
 def read_data(path_to_csv):
     return pd.read_csv(path_to_csv, sep=";")
@@ -43,7 +46,7 @@ def create_antennas_dfs_new(data_frame):
 # apply all the different functions to each antenna data frame
 # Arguments like "round" or "truncate" will be passed to choose from future options
 def apply_to_antennas_dfs(dict_of_dataframes):
-    
+
     # TODO fix "copy of a slice" error without using df.copy() to avoid memory peaks
 
     for antenna_key, antenna_df in dict_of_dataframes.items():
@@ -70,16 +73,27 @@ def apply_to_antennas_dfs(dict_of_dataframes):
         antenna_df['Time Delta'] = (antenna_df['Scan Date and Time'] -
                                     antenna_df['Scan Date and Time'].shift(1)).astype('timedelta64[s]')
 
-        # TODO - Calculate visit duration
-        # Right now this only returns the time delta if is a valid visit, the sum has to be done
-        min_visit_time = 7  # 7 seconds, arbitrary value
+        # Calculate which individual visits are valid and their durations
+        # It has to be the same Tag ID and a visit between 1 and 7 seconds
+        min_visit_time = MINIMUM_VISIT_TIME
 
-        antenna_df['Visit Duration'] = np.where((antenna_df['Time Delta'] <= min_visit_time) &
-                                                (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
-                                                antenna_df['Time Delta'], 0)
+        antenna_df['Valid Visits'] = 0
+        antenna_df['Valid Visits'] = np.where((antenna_df['Time Delta'] > 0) &
+                                              (antenna_df['Time Delta'] <= min_visit_time) &
+                                              (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
+                                              antenna_df['Time Delta'], 0)
+
+        # Stopper: 1 when the running summation has to stop
+        antenna_df['Visit Stopper'] = np.where(antenna_df['Valid Visits'] == 0, 1, 0)
+
+        # Sum the duration of the individual visits to find the total
+        sum_duration = antenna_df.groupby(antenna_df['Visit Stopper'].shift(fill_value=0).cumsum())['Valid Visits'].transform('sum')
+        antenna_df['Visit Duration'] = np.where(antenna_df['Visit Stopper'] == 1, sum_duration, 0)
+        # Shift up al rows so the visit duration is in line with the correct Tag ID
+        antenna_df['Visit Duration'] = antenna_df['Visit Duration'].shift(-1)
 
         # Reorder the columns
-        antenna_df = antenna_df[['DEC Tag ID', 'Scan Date and Time', 'Time Delta', 'Visit Duration', 'Antenna ID']]
+        # antenna_df = antenna_df[['DEC Tag ID', 'Scan Date and Time', 'Time Delta', 'Visit Duration', 'Antenna ID']]
 
         antennas_dfs[antenna_key] = antenna_df
 
