@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from time import time
 
 
@@ -12,9 +13,8 @@ def read_data(path_to_csv):
 
 
 # Remove unused columns (at least for now)
-def delete_unused_columns(data_frame):
-    return data_frame.drop(columns=['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
-                                    'Temperature,C', 'Signal,mV', 'Is Duplicate'])
+def delete_unused_columns(data_frame, columns_to_delete):
+    return data_frame.drop(columns=columns_to_delete)
 
 
 # Round milliseconds to seconds (OPTION 1)
@@ -32,7 +32,7 @@ def remove_duplicates(data_frame):
     return data_frame.drop_duplicates()
 
 
-# Create a dict with "n" dataframes, being "n" the number of different antennas on the data
+# Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
 def create_antennas_dfs_new(data_frame):
     antennas_ids = sorted(data_frame['Antenna ID'].unique().tolist())
     antennas_data_frames = {}
@@ -45,7 +45,7 @@ def create_antennas_dfs_new(data_frame):
 
 # apply all the different functions to each antenna data frame
 # Arguments like "round" or "truncate" will be passed to choose from future options
-def apply_to_antennas_dfs(dict_of_dataframes):
+def apply_to_all_antennas_dfs(dict_of_dataframes):
 
     # TODO fix "copy of a slice" error without using df.copy() to avoid memory peaks
 
@@ -107,18 +107,31 @@ start_time = time()
 df = read_data("data/Rawdata_enero.csv")
 
 # Delete unused columns
-df = delete_unused_columns(df)
+df = delete_unused_columns(df, ['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
+                                'Temperature,C', 'Signal,mV', 'Is Duplicate'])
 
 # Create dataframes for each antenna
 antennas_dfs = create_antennas_dfs_new(df)
 
 # Apply all the necessary functions to the antennas data frames
-antennas_dfs = apply_to_antennas_dfs(antennas_dfs)
+antennas_dfs = apply_to_all_antennas_dfs(antennas_dfs)
 
-# Print the dataframe and the dtypes of each column
-print(df.dtypes)
+# Quick plot just for fun
+# Average duration of the visits for each antenna
+list_of_means = []
+for antenna_key, antenna_df in antennas_dfs.items():
+    no_null = antenna_df[antenna_df["Visit Duration"] != 0]
+    list_of_means.append(no_null["Visit Duration"].mean())
+plt.figure()
+plt.bar(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'], list_of_means)
+plt.title("Average visit duration for each antenna")
+plt.xlabel("Antennas")
+plt.ylabel("Seconds")
+plt.show()
+
+# Print the main dataframe
 print(df)
-print(antennas_dfs["antenna_1"].dtypes)
+# Print the first antenna_df
 print(antennas_dfs["antenna_1"])
 
 # Some executing times
