@@ -54,15 +54,17 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
         antenna_df['Scan Date and Time'] = pd.to_datetime(antenna_df['Scan Date'] + ' ' +
                                                           antenna_df['Scan Time'], format="%d/%m/%Y %H:%M:%S.%f")
 
-        # Remove milliseconds by rounding
-        round_milliseconds(antenna_df, "Scan Date and Time")
-
-        # Or remove milliseconds truncating
-        # truncate_milliseconds(antenna_df, "Scan Date and Time")
+        if round_or_truncate == 1:
+            # Remove milliseconds by rounding
+            round_milliseconds(antenna_df, "Scan Date and Time")
+        elif round_or_truncate == 2:
+            # Remove milliseconds truncating
+            truncate_milliseconds(antenna_df, "Scan Date and Time")
 
         # Filter all data by date (start and end)
-        antenna_df = antenna_df[(antenna_df["Scan Date and Time"] >= '2021-01-25 00:00:00') &
-                                (antenna_df["Scan Date and Time"] <= '2021-01-27 12:00:00')]
+        if filter_start_datetime != "" and filter_end_datetime != "":
+            antenna_df = antenna_df[(antenna_df["Scan Date and Time"] >= filter_start_datetime) &
+                                    (antenna_df["Scan Date and Time"] <= filter_end_datetime)]
 
         # Remove unused columns before removing duplicates!
         antenna_df = antenna_df.drop(columns=['Scan Date', 'Scan Time'])
@@ -120,6 +122,14 @@ def average_plot():
     plt.show()
 
 
+# Input variables that will be frontend UI elements (textbox, checkboxes, etc)
+# Default values are here temporary, should be default values in each function or other workarounds
+filter_start_datetime = input("Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
+                              "\nLeave this input blank if you don't want to filter by date: ")
+filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
+                            "\nLeave this input blank if you don't want to filter by date: ")
+round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps: ") or "1"
+
 # Tracking some time to study performance
 start_time = time()
 
@@ -130,8 +140,28 @@ df = read_data("data/Rawdata_enero.csv")
 df = delete_unused_columns(df, ['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
                                 'Temperature,C', 'Signal,mV', 'Is Duplicate'])
 
+# Create a list of unique Tag IDs to use in other functions
+all_tag_ids = df['DEC Tag ID'].unique().tolist()
+
 # Create dataframes for each antenna
 antennas_dfs = create_antennas_dfs_new(df)
+
+
+# Creates a list with only the Tag IDs that have visited all antennas. Warning, this code is a bit hacky
+def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
+    good_visitors = set([])
+    for tag_id in tag_id_list:
+        visitor_in_df = []
+        for antenna_key, antenna_df in dict_of_dataframes.items():
+            visitor_in_df.append(tag_id in antenna_df["DEC Tag ID"].values)  # True/False if in df
+        if all(visitor_in_df):  # if all elements are True, is a "good" visitor
+            good_visitors.add(tag_id)
+    return good_visitors
+
+
+print(len(create_list_of_good_visitors(all_tag_ids, antennas_dfs)))
+print(create_list_of_good_visitors(all_tag_ids, antennas_dfs))
+
 
 # Apply all the necessary functions to the antennas data frames
 antennas_dfs = apply_to_all_antennas_dfs(antennas_dfs)
