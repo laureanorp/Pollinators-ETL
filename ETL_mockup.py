@@ -60,6 +60,10 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
         # Or remove milliseconds truncating
         # truncate_milliseconds(antenna_df, "Scan Date and Time")
 
+        # Filter all data by date (start and end)
+        antenna_df = antenna_df[(antenna_df["Scan Date and Time"] >= '2021-01-25 00:00:00') &
+                                (antenna_df["Scan Date and Time"] <= '2021-01-27 12:00:00')]
+
         # Remove unused columns before removing duplicates!
         antenna_df = antenna_df.drop(columns=['Scan Date', 'Scan Time'])
 
@@ -87,7 +91,8 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
         antenna_df['Visit Stopper'] = np.where(antenna_df['Valid Visits'] == 0, 1, 0)
 
         # Sum the duration of the individual visits to find the total
-        sum_duration = antenna_df.groupby(antenna_df['Visit Stopper'].shift(fill_value=0).cumsum())['Valid Visits'].transform('sum')
+        sum_duration = antenna_df.groupby(antenna_df['Visit Stopper'].shift(fill_value=0)
+                                          .cumsum())['Valid Visits'].transform('sum')
         antenna_df['Visit Duration'] = np.where(antenna_df['Visit Stopper'] == 1, sum_duration, 0)
         # Shift up al rows so the visit duration is in line with the correct Tag ID
         antenna_df['Visit Duration'] = antenna_df['Visit Duration'].shift(-1)
@@ -98,6 +103,21 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
         antennas_dfs[antenna_key] = antenna_df
 
     return antennas_dfs
+
+
+# Quick plot just for fun
+# Average duration of the visits for each antenna
+def average_plot():
+    list_of_means = []
+    for antenna_key, antenna_df in antennas_dfs.items():
+        no_null = antenna_df[antenna_df["Visit Duration"] != 0]
+        list_of_means.append(no_null["Visit Duration"].mean())
+    plt.figure()
+    plt.bar(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'], list_of_means)
+    plt.title("Average visit duration for each antenna")
+    plt.xlabel("Antennas")
+    plt.ylabel("Seconds")
+    plt.show()
 
 
 # Tracking some time to study performance
@@ -116,21 +136,8 @@ antennas_dfs = create_antennas_dfs_new(df)
 # Apply all the necessary functions to the antennas data frames
 antennas_dfs = apply_to_all_antennas_dfs(antennas_dfs)
 
-# Quick plot just for fun
-# Average duration of the visits for each antenna
-list_of_means = []
-for antenna_key, antenna_df in antennas_dfs.items():
-    no_null = antenna_df[antenna_df["Visit Duration"] != 0]
-    list_of_means.append(no_null["Visit Duration"].mean())
-plt.figure()
-plt.bar(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'], list_of_means)
-plt.title("Average visit duration for each antenna")
-plt.xlabel("Antennas")
-plt.ylabel("Seconds")
-plt.show()
-
 # Print the main dataframe
-print(df)
+# print(df)
 # Print the first antenna_df
 print(antennas_dfs["antenna_1"])
 
