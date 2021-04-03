@@ -12,6 +12,18 @@ def read_data(path_to_csv):
     return pd.read_csv(path_to_csv, sep=";")
 
 
+# Creates a list with only the Tag IDs that have visited all antennas. Warning, this code is a bit hacky
+def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
+    good_visitors = set([])
+    for tag_id in tag_id_list:
+        visitor_in_df = []
+        for antenna_key, antenna_df in dict_of_dataframes.items():
+            visitor_in_df.append(tag_id in antenna_df["DEC Tag ID"].values)  # True/False if in df
+        if all(visitor_in_df):  # if all elements are True, it's a "good" visitor
+            good_visitors.add(tag_id)
+    return good_visitors
+
+
 # Remove unused columns (at least for now)
 def delete_unused_columns(data_frame, columns_to_delete):
     return data_frame.drop(columns=columns_to_delete)
@@ -50,14 +62,19 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
     # TODO fix "copy of a slice" error without using df.copy() to avoid memory peaks
 
     for antenna_key, antenna_df in dict_of_dataframes.items():
+
+        # Filter dataframe values by removing those "not good" tag IDs
+        if all_antennas_visited == "2":
+            antenna_df = antenna_df[antenna_df['DEC Tag ID'].isin(list_of_good_visitors)]
+
         # Parse scan dates and times manually after reading the CSV
         antenna_df['Scan Date and Time'] = pd.to_datetime(antenna_df['Scan Date'] + ' ' +
                                                           antenna_df['Scan Time'], format="%d/%m/%Y %H:%M:%S.%f")
 
-        if round_or_truncate == 1:
+        if round_or_truncate == "1":
             # Remove milliseconds by rounding
             round_milliseconds(antenna_df, "Scan Date and Time")
-        elif round_or_truncate == 2:
+        elif round_or_truncate == "2":
             # Remove milliseconds truncating
             truncate_milliseconds(antenna_df, "Scan Date and Time")
 
@@ -129,6 +146,8 @@ filter_start_datetime = input("Start date and time for filtering the dataset. Us
 filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
                             "\nLeave this input blank if you don't want to filter by date: ")
 round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps: ") or "1"
+all_antennas_visited = input("Choose to include all pollinators (1, default) or only those that have "
+                             "visited all antennas of the experiment (2): ") or "1"
 
 # Tracking some time to study performance
 start_time = time()
@@ -146,22 +165,8 @@ all_tag_ids = df['DEC Tag ID'].unique().tolist()
 # Create dataframes for each antenna
 antennas_dfs = create_antennas_dfs_new(df)
 
-
-# Creates a list with only the Tag IDs that have visited all antennas. Warning, this code is a bit hacky
-def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
-    good_visitors = set([])
-    for tag_id in tag_id_list:
-        visitor_in_df = []
-        for antenna_key, antenna_df in dict_of_dataframes.items():
-            visitor_in_df.append(tag_id in antenna_df["DEC Tag ID"].values)  # True/False if in df
-        if all(visitor_in_df):  # if all elements are True, is a "good" visitor
-            good_visitors.add(tag_id)
-    return good_visitors
-
-
-print(len(create_list_of_good_visitors(all_tag_ids, antennas_dfs)))
-print(create_list_of_good_visitors(all_tag_ids, antennas_dfs))
-
+# Create list of good visitors (Tag IDs with all antennas are visited)
+list_of_good_visitors = create_list_of_good_visitors(all_tag_ids, antennas_dfs)
 
 # Apply all the necessary functions to the antennas data frames
 antennas_dfs = apply_to_all_antennas_dfs(antennas_dfs)
