@@ -127,7 +127,7 @@ plt.bar(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'], list_of_means)
 plt.title("Average visit duration for each antenna")
 plt.xlabel("Antennas")
 plt.ylabel("Seconds")
-plt.show()
+# plt.show()
 
 # Print the main dataframe
 print(df)
