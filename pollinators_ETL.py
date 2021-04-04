@@ -7,13 +7,17 @@ from time import time
 MINIMUM_VISIT_TIME = 7  # 7 seconds, arbitrary value
 
 
-# Import CSV data
 def read_data(path_to_csv):
+    """ Imports the CSV file containing all the data from BioMark """
     return pd.read_csv(path_to_csv, sep=";")
 
 
-# Creates a list with only the Tag IDs that have visited all antennas. Warning, this code is a bit hacky
 def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
+    """
+    Creates and returns a set that includes only those Tag IDs that have visited all antennas
+    Takes the list of Tag IDs and the dict of antennas dataframes as arguments,
+    and iterates over the Tag IDs list, checking if each Tag ID is present on every dataframe
+    """
     good_visitors = set([])
     for tag_id in tag_id_list:
         visitor_in_df = []
@@ -24,28 +28,33 @@ def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
     return good_visitors
 
 
-# Remove unused columns (at least for now)
 def delete_unused_columns(data_frame, columns_to_delete):
+    """ Deletes columns that won't be used anywhere """
     return data_frame.drop(columns=columns_to_delete)
 
 
-# Round milliseconds to seconds (OPTION 1)
 def round_milliseconds(data_frame, column):
+    """ Rounds milliseconds on the desired column """
     data_frame[column] = data_frame[column].dt.round('1s')
 
 
-# Truncate milliseconds (OPTION 2)
 def truncate_milliseconds(data_frame, column):
+    """ Truncates milliseconds on the desired column """
     data_frame[column] = data_frame[column].astype('datetime64[s]')
 
 
 # Remove duplicate rows
 def remove_duplicates(data_frame):
+    """ Removes duplicated rows (where every column has the same value) """
     return data_frame.drop_duplicates()
 
 
-# Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
 def create_antennas_dfs_new(data_frame):
+    """
+    Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
+    Each dataframe is named after the number of its antenna
+    Structure of the returned dict is "antenna_n":pd.DataFrame
+    """
     antennas_ids = sorted(data_frame['Antenna ID'].unique().tolist())
     antennas_data_frames = {}
     for antenna_number in antennas_ids:
@@ -55,10 +64,12 @@ def create_antennas_dfs_new(data_frame):
     return antennas_data_frames
 
 
-# apply all the different functions to each antenna data frame
-# Arguments like "round" or "truncate" will be passed to choose from future options
 def apply_to_all_antennas_dfs(dict_of_dataframes):
-
+    """
+    Apply all the different functions to each antenna dataframe
+    TODO Arguments like "round" or "truncate" should be passed to choose
+    Probably this should be the main function
+    """
     # TODO fix "copy of a slice" error without using df.copy() to avoid memory peaks
 
     for antenna_key, antenna_df in dict_of_dataframes.items():
@@ -124,18 +135,21 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
     return antennas_dfs
 
 
-# Quick plot just for fun
-# Average duration of the visits for each antenna
-def average_plot():
+def plot_avg_visit_duration():
+    """
+    Calculates the mean of no null visit durations for each antenna
+    Then plots that average duration for each antenna using a bar plot
+    """
     list_of_means = []
     for antenna_key, antenna_df in antennas_dfs.items():
         no_null = antenna_df[antenna_df["Visit Duration"] != 0]
         list_of_means.append(no_null["Visit Duration"].mean())
     plt.figure()
-    plt.bar(['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'], list_of_means)
+    plt.bar(antennas_dfs.keys(), list_of_means)
     plt.title("Average visit duration for each antenna")
     plt.xlabel("Antennas")
     plt.ylabel("Seconds")
+    plt.xticks(rotation=45)
     plt.show()
 
 
