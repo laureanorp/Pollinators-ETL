@@ -1,18 +1,17 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from time import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 MINIMUM_VISIT_TIME = 7  # 7 seconds, arbitrary value
 
 
-def read_data(path_to_csv):
+def csv_to_dataframe(path_to_csv):
     """ Imports the CSV file containing all the data from BioMark """
     return pd.read_csv(path_to_csv, sep=";")
 
 
-def create_list_of_good_visitors(tag_id_list, dict_of_dataframes):
+def list_of_tags_with_all_antennas_visited(tag_id_list, dict_of_dataframes):
     """
     Creates and returns a set that includes only those Tag IDs that have visited all antennas
     Takes the list of Tag IDs and the dict of antennas dataframes as arguments,
@@ -44,12 +43,12 @@ def truncate_milliseconds(data_frame, column):
 
 
 # Remove duplicate rows
-def remove_duplicates(data_frame):
+def remove_duplicated_rows(data_frame):
     """ Removes duplicated rows (where every column has the same value) """
     return data_frame.drop_duplicates()
 
 
-def create_antennas_dfs_new(data_frame):
+def create_dict_of_antennas_dfs(data_frame):
     """
     Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
     Each dataframe is named after the number of its antenna
@@ -64,7 +63,25 @@ def create_antennas_dfs_new(data_frame):
     return antennas_data_frames
 
 
-def apply_to_all_antennas_dfs(dict_of_dataframes):
+def plot_avg_visit_duration(antennas_dfs):
+    """
+    Calculates the mean of no null visit durations for each antenna
+    Then plots that average duration for each antenna using a bar plot
+    """
+    list_of_means = []
+    for antenna_key, antenna_df in antennas_dfs.items():
+        no_null = antenna_df[antenna_df["Visit Duration"] != 0]
+        list_of_means.append(no_null["Visit Duration"].mean())
+    plt.figure()
+    plt.bar(antennas_dfs.keys(), list_of_means)
+    plt.title("Average visit duration for each antenna")
+    plt.xlabel("Antennas")
+    plt.ylabel("Seconds")
+    plt.xticks(rotation=45)
+    plt.show()
+
+
+def apply_to_all_antennas_dfs(dict_of_dataframes, filter_start_datetime, filter_end_datetime, round_or_truncate, all_antennas_visited, list_of_good_visitors):
     """
     Apply all the different functions to each antenna dataframe
     TODO Arguments like "round" or "truncate" should be passed to choose
@@ -97,99 +114,46 @@ def apply_to_all_antennas_dfs(dict_of_dataframes):
         # Remove unused columns before removing duplicates!
         antenna_df = antenna_df.drop(columns=['Scan Date', 'Scan Time'])
 
-        # Remove duplicates
-        antenna_df = remove_duplicates(antenna_df)
+        antenna_df = remove_duplicated_rows(antenna_df)
 
-        # Sort using DEC tag ID so the time delta is correctly calculated
-        antenna_df = antenna_df.sort_values(by=['DEC Tag ID', 'Scan Date and Time'])
-
-        # Calculate time delta by subtracting "Scan Time" rows
-        antenna_df['Time Delta'] = (antenna_df['Scan Date and Time'] -
-                                    antenna_df['Scan Date and Time'].shift(1)).astype('timedelta64[s]')
-
-        # Calculate which individual visits are valid and their durations
-        # It has to be the same Tag ID and a visit between 1 and 7 seconds
-        min_visit_time = MINIMUM_VISIT_TIME
-
-        antenna_df['Valid Visits'] = 0
-        antenna_df['Valid Visits'] = np.where((antenna_df['Time Delta'] > 0) &
-                                              (antenna_df['Time Delta'] <= min_visit_time) &
-                                              (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
-                                              antenna_df['Time Delta'], 0)
-
-        # Stopper: 1 when the running summation has to stop
-        antenna_df['Visit Stopper'] = np.where(antenna_df['Valid Visits'] == 0, 1, 0)
-
-        # Sum the duration of the individual visits to find the total
-        sum_duration = antenna_df.groupby(antenna_df['Visit Stopper'].shift(fill_value=0)
-                                          .cumsum())['Valid Visits'].transform('sum')
-        antenna_df['Visit Duration'] = np.where(antenna_df['Visit Stopper'] == 1, sum_duration, 0)
-        # Shift up al rows so the visit duration is in line with the correct Tag ID
-        antenna_df['Visit Duration'] = antenna_df['Visit Duration'].shift(-1)
+        antenna_df = calculate_visit_duration(antenna_df)
 
         # Reorder the columns
         # antenna_df = antenna_df[['DEC Tag ID', 'Scan Date and Time', 'Time Delta', 'Visit Duration', 'Antenna ID']]
 
-        antennas_dfs[antenna_key] = antenna_df
+        dict_of_dataframes[antenna_key] = antenna_df
 
-    return antennas_dfs
-
-
-def plot_avg_visit_duration():
-    """
-    Calculates the mean of no null visit durations for each antenna
-    Then plots that average duration for each antenna using a bar plot
-    """
-    list_of_means = []
-    for antenna_key, antenna_df in antennas_dfs.items():
-        no_null = antenna_df[antenna_df["Visit Duration"] != 0]
-        list_of_means.append(no_null["Visit Duration"].mean())
-    plt.figure()
-    plt.bar(antennas_dfs.keys(), list_of_means)
-    plt.title("Average visit duration for each antenna")
-    plt.xlabel("Antennas")
-    plt.ylabel("Seconds")
-    plt.xticks(rotation=45)
-    plt.show()
+    return dict_of_dataframes
 
 
-# Input variables that will be frontend UI elements (textbox, checkboxes, etc)
-# Default values are here temporary, should be default values in each function or other workarounds
-filter_start_datetime = input("Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
-                              "\nLeave this input blank if you don't want to filter by date: ")
-filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
-                            "\nLeave this input blank if you don't want to filter by date: ")
-round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps: ") or "1"
-all_antennas_visited = input("Choose to include all pollinators (1, default) or only those that have "
-                             "visited all antennas of the experiment (2): ") or "1"
+def calculate_visit_duration(antenna_df):
+    """ Calculates the duration of the visits of pollinators in each antenna """
 
-# Tracking some time to study performance
-start_time = time()
+    # Sort using DEC Tag ID so time delta is correctly calculated
+    antenna_df = antenna_df.sort_values(by=['DEC Tag ID', 'Scan Date and Time'])
 
-# Create pandas df
-df = read_data("data/Rawdata_enero.csv")
+    # Calculate time delta by subtracting "Scan Time" rows
+    antenna_df['Time Delta'] = (antenna_df['Scan Date and Time'] -
+                                antenna_df['Scan Date and Time'].shift(1)).astype('timedelta64[s]')
 
-# Delete unused columns
-df = delete_unused_columns(df, ['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
-                                'Temperature,C', 'Signal,mV', 'Is Duplicate'])
+    # Calculate which individual visits are valid and their durations
+    # It has to be the same Tag ID and a visit between 1 and 7 seconds
+    min_visit_time = MINIMUM_VISIT_TIME
+    antenna_df['Valid Visits'] = 0
+    antenna_df['Valid Visits'] = np.where((antenna_df['Time Delta'] > 0) &
+                                          (antenna_df['Time Delta'] <= min_visit_time) &
+                                          (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
+                                          antenna_df['Time Delta'], 0)
 
-# Create a list of unique Tag IDs to use in other functions
-all_tag_ids = df['DEC Tag ID'].unique().tolist()
+    # Stopper: 1 when the running summation has to stop
+    antenna_df['Visit Stopper'] = np.where(antenna_df['Valid Visits'] == 0, 1, 0)
 
-# Create dataframes for each antenna
-antennas_dfs = create_antennas_dfs_new(df)
+    # Sum the duration of the individual visits to find the total
+    sum_duration = antenna_df.groupby(antenna_df['Visit Stopper'].shift(fill_value=0)
+                                      .cumsum())['Valid Visits'].transform('sum')
+    antenna_df['Visit Duration'] = np.where(antenna_df['Visit Stopper'] == 1, sum_duration, 0)
 
-# Create list of good visitors (Tag IDs with all antennas are visited)
-list_of_good_visitors = create_list_of_good_visitors(all_tag_ids, antennas_dfs)
+    # Shift up al rows so the visit duration is in line with the correct Tag ID
+    antenna_df['Visit Duration'] = antenna_df['Visit Duration'].shift(-1)
 
-# Apply all the necessary functions to the antennas data frames
-antennas_dfs = apply_to_all_antennas_dfs(antennas_dfs)
-
-# Print the main dataframe
-# print(df)
-# Print the first antenna_df
-print(antennas_dfs["antenna_1"])
-
-# Some executing times
-end_time = time()
-print(end_time - start_time)
+    return antenna_df
