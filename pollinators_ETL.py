@@ -1,4 +1,6 @@
 
+from typing import List, Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -6,12 +8,24 @@ import pandas as pd
 MINIMUM_VISIT_TIME = 7  # 7 seconds, arbitrary value
 
 
-def csv_to_dataframe(path_to_csv):
+class Pipeline:
+    """ Class that includes all the functions of the ETL pipeline """
+
+    def __init__(self, path_to_csv: str, min_visit_time: int):
+        self.csv_path = path_to_csv
+        self.min_visit_time = min_visit_time
+
+
+    def run_pipeline(self):
+        pass
+
+
+def csv_to_dataframe(path_to_csv: str):
     """ Imports the CSV file containing all the data from BioMark """
     return pd.read_csv(path_to_csv, sep=";")
 
 
-def list_of_tags_with_all_antennas_visited(tag_id_list, dict_of_dataframes):
+def list_of_tags_with_all_antennas_visited(tag_id_list: List[str], dict_of_dataframes: Dict[str, pd.DataFrame]):
     """
     Creates and returns a set that includes only those Tag IDs that have visited all antennas
     Takes the list of Tag IDs and the dict of antennas dataframes as arguments,
@@ -27,28 +41,28 @@ def list_of_tags_with_all_antennas_visited(tag_id_list, dict_of_dataframes):
     return good_visitors
 
 
-def delete_unused_columns(data_frame, columns_to_delete):
+def delete_unused_columns(data_frame: pd.DataFrame, columns_to_delete: list):
     """ Deletes columns that won't be used anywhere """
     return data_frame.drop(columns=columns_to_delete)
 
 
-def round_milliseconds(data_frame, column):
+def round_milliseconds(data_frame: pd.DataFrame, column: str):
     """ Rounds milliseconds on the desired column """
     data_frame[column] = data_frame[column].dt.round('1s')
 
 
-def truncate_milliseconds(data_frame, column):
+def truncate_milliseconds(data_frame: pd.DataFrame, column: str):
     """ Truncates milliseconds on the desired column """
     data_frame[column] = data_frame[column].astype('datetime64[s]')
 
 
 # Remove duplicate rows
-def remove_duplicated_rows(data_frame):
+def remove_duplicated_rows(data_frame: pd.DataFrame):
     """ Removes duplicated rows (where every column has the same value) """
     return data_frame.drop_duplicates()
 
 
-def create_dict_of_antennas_dfs(data_frame):
+def create_dict_of_antennas_dfs(data_frame: pd.DataFrame):
     """
     Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
     Each dataframe is named after the number of its antenna
@@ -63,7 +77,7 @@ def create_dict_of_antennas_dfs(data_frame):
     return antennas_data_frames
 
 
-def plot_avg_visit_duration(antennas_dfs):
+def plot_avg_visit_duration(antennas_dfs: Dict[str, pd.DataFrame]):
     """
     Calculates the mean of no null visit durations for each antenna
     Then plots that average duration for each antenna using a bar plot
@@ -81,7 +95,7 @@ def plot_avg_visit_duration(antennas_dfs):
     plt.show()
 
 
-def apply_to_all_antennas_dfs(dict_of_dataframes, filter_start_datetime, filter_end_datetime, round_or_truncate, all_antennas_visited, list_of_good_visitors):
+def apply_to_all_antennas_dfs(dict_of_dataframes: Dict[str, pd.DataFrame], filter_start_datetime: str, filter_end_datetime: str, round_or_truncate: str, all_antennas_visited: str, list_of_good_visitors: List[str]):
     """
     Apply all the different functions to each antenna dataframe
     TODO Arguments like "round" or "truncate" should be passed to choose
@@ -126,7 +140,7 @@ def apply_to_all_antennas_dfs(dict_of_dataframes, filter_start_datetime, filter_
     return dict_of_dataframes
 
 
-def calculate_visit_duration(antenna_df):
+def calculate_visit_duration(antenna_df: pd.DataFrame):
     """ Calculates the duration of the visits of pollinators in each antenna """
 
     # Sort using DEC Tag ID so time delta is correctly calculated

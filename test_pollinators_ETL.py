@@ -37,7 +37,7 @@ def test_round_milliseconds(df_round_truncate_ms: pd.DataFrame):
     assert df_round_truncate_ms["time"].tolist() == ROUNDED_MILLISECONDS
 
 
-def test_truncate_milliseconds(df_round_truncate_ms):
+def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     """ Tests if milliseconds are being truncated correctly """
     truncate_milliseconds(df_round_truncate_ms, "time")
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
