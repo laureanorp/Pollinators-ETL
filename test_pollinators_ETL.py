@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from pollinators_ETL import round_milliseconds, truncate_milliseconds
+from pollinators_ETL import Pipeline
 
 
 @pytest.fixture
@@ -33,11 +33,13 @@ def test_round_milliseconds(df_round_truncate_ms: pd.DataFrame):
     Tests if milliseconds are being rounded correctly
     Including extreme cases like 0.500ms
     """
-    round_milliseconds(df_round_truncate_ms, "time")
+    pipeline_for_testing = Pipeline("data/test_csv.csv")
+    pipeline_for_testing._round_milliseconds(df_round_truncate_ms, "time")
     assert df_round_truncate_ms["time"].tolist() == ROUNDED_MILLISECONDS
 
 
 def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     """ Tests if milliseconds are being truncated correctly """
-    truncate_milliseconds(df_round_truncate_ms, "time")
+    pipeline_for_testing = Pipeline("data/test_csv.csv")
+    pipeline_for_testing._truncate_milliseconds(df_round_truncate_ms, "time")
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
