@@ -16,14 +16,20 @@ round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (
 all_antennas_visited = input("Choose to include all pollinators (1, default) or only those that have "
                              "visited all antennas of the experiment (2): ") or "1"
 
+# Instance the Pipeline class
 pipeline_1 = Pipeline("data/Rawdata_enero.csv")
 
+# Run the main branch of the pipeline
 pipeline_1.run_pipeline(min_visit_time, filter_start_datetime, filter_end_datetime, round_or_truncate,
                         all_antennas_visited)
 
+# Remove unnecessary columns and rows
 pipeline_1.simplify_dataframes()
 
 print(pipeline_1.antennas_dfs["antenna_1"])
+
+#Export antennas_dfs to an excel file
+pipeline_1.export_dataframes_to_excel()
 
 # pipeline_1.concatenate_antennas_dfs(["antenna_1", "antenna_2"])
 # print(pipeline_1.antennas_dfs["antenna_1_antenna_2"])

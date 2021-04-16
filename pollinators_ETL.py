@@ -193,8 +193,11 @@ class Pipeline:
         # TODO solve problem: scan time should be the first or the last signal?
         for antenna_key in self.antennas_dfs:
             self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key].drop(columns='Time Delta')
-            self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key][self.antennas_dfs[antenna_key]['Visit Duration'] != 0]
+            self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key][
+                self.antennas_dfs[antenna_key]['Visit Duration'] != 0]
 
     def export_dataframes_to_excel(self):
         """ Exports the current antenna_dfs to an excel file with a sheet for each dataframe """
-        pass
+        with pd.ExcelWriter('exports/Antennas_dfs.xlsx') as writer:
+            for antenna_key in self.antennas_dfs:
+                self.antennas_dfs[antenna_key].to_excel(writer, sheet_name=antenna_key)
