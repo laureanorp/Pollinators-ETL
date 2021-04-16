@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-MINIMUM_VISIT_TIME = 7  # 7 seconds, arbitrary value
-
 
 class Pipeline:
     """ Class that includes all the functions of the ETL pipeline """
@@ -19,12 +17,12 @@ class Pipeline:
         self.all_antennas_visited = None
         self.antennas_dfs = None
 
-    def _csv_to_dataframe(self, path_to_csv):
+    def _csv_to_dataframe(self, path_to_csv) -> pd.DataFrame:
         """ Imports the CSV file containing all the data from BioMark """
         return pd.read_csv(path_to_csv, sep=";")
 
     def _list_of_tags_with_all_antennas_visited(self, tag_id_list: List[str],
-                                                dict_of_dataframes: Dict[str, pd.DataFrame]):
+                                                dict_of_dataframes: Dict[str, pd.DataFrame]) -> set:
         """
         Creates and returns a set that includes only those Tag IDs that have visited all antennas
         Takes the list of Tag IDs and the dict of antennas dataframes as arguments,
@@ -39,7 +37,7 @@ class Pipeline:
                 good_visitors.add(tag_id)
         return good_visitors
 
-    def _delete_unused_columns(self, data_frame: pd.DataFrame, columns_to_delete: list):
+    def _delete_unused_columns(self, data_frame: pd.DataFrame, columns_to_delete: list) -> pd.DataFrame:
         """ Deletes columns that won't be used anywhere """
         return data_frame.drop(columns=columns_to_delete)
 
@@ -51,11 +49,11 @@ class Pipeline:
         """ Truncates milliseconds on the desired column """
         data_frame[column] = data_frame[column].astype('datetime64[s]')
 
-    def _remove_duplicated_rows(self, data_frame: pd.DataFrame):
+    def _remove_duplicated_rows(self, data_frame: pd.DataFrame) -> pd.DataFrame:
         """ Removes duplicated rows (where every column has the same value) """
         return data_frame.drop_duplicates()
 
-    def _create_dict_of_antennas_dfs(self, data_frame: pd.DataFrame):
+    def _create_dict_of_antennas_dfs(self, data_frame: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         """
         Create a dictionary with "n" dataframes, being "n" the number of different antennas on the data
         Each dataframe is named after the number of its antenna
@@ -69,7 +67,7 @@ class Pipeline:
             antennas_data_frames[key_name] = data_frame[antenna_data_frame]
         return antennas_data_frames
 
-    def _calculate_visit_duration(self, antenna_df: pd.DataFrame):
+    def _calculate_visit_duration(self, antenna_df: pd.DataFrame) -> pd.DataFrame:
         """ Calculates the duration of the visits of pollinators in each antenna """
 
         # Sort using DEC Tag ID so time delta is correctly calculated
@@ -81,10 +79,9 @@ class Pipeline:
 
         # Calculate which individual visits are valid and their durations
         # It has to be the same Tag ID and a visit between 1 and 7 seconds
-        min_visit_time = MINIMUM_VISIT_TIME
         antenna_df['Valid Visits'] = 0
         antenna_df['Valid Visits'] = np.where((antenna_df['Time Delta'] > 0) &
-                                              (antenna_df['Time Delta'] <= min_visit_time) &
+                                              (antenna_df['Time Delta'] <= self.min_visit_time) &
                                               (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
                                               antenna_df['Time Delta'], 0)
 
@@ -98,6 +95,8 @@ class Pipeline:
 
         # Shift up al rows so the visit duration is in line with the correct Tag ID
         antenna_df['Visit Duration'] = antenna_df['Visit Duration'].shift(-1)
+        # Drop unnecessary columns used for the calculations only
+        antenna_df = antenna_df.drop(columns=['Valid Visits', 'Visit Stopper'])
 
         return antenna_df
 
@@ -120,7 +119,7 @@ class Pipeline:
 
     def _process_all_antennas_dfs(self, dict_of_dataframes: Dict[str, pd.DataFrame], filter_start_datetime: str,
                                   filter_end_datetime: str, round_or_truncate: str, all_antennas_visited: str,
-                                  list_of_good_visitors: Set[str]):
+                                  list_of_good_visitors: Set[str]) -> Dict[str, pd.DataFrame]:
         """ Apply all the different functions to each antenna dataframe """
 
         # TODO fix "copy of a slice" error without using df.copy() to avoid memory peaks
@@ -171,4 +170,31 @@ class Pipeline:
                                                            self.filter_end_datetime,
                                                            self.round_or_truncate, self.all_antennas_visited,
                                                            list_of_good_visitors)
-        return self.antennas_dfs
+
+    # TODO what happens if antennas_dfs is empty
+    def concatenate_antennas_dfs(self, antennas_names: List[str]):
+        """
+        Concatenates two or more dataframes
+        Removes the originals from the antennas_dfs dictionary and adds the new one
+        """
+        antennas_to_concat = []
+        for antenna_name in antennas_names:
+            antennas_to_concat.append(self.antennas_dfs[antenna_name])
+            del self.antennas_dfs[antenna_name]  # delete original antenna dataframe
+        new_antenna = pd.concat(antennas_to_concat)
+        self.antennas_dfs['_'.join(antennas_names)] = new_antenna
+
+    def simplify_dataframes(self):
+        """
+        Removes Time Delta column and leaves only the final rows where Visit duration is > 0
+        The final structure of each dataframe is:
+        Antenna ID | Tag ID | Scan Date and time | Visit Duration
+        """
+        # TODO solve problem: scan time should be the first or the last signal?
+        for antenna_key in self.antennas_dfs:
+            self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key].drop(columns='Time Delta')
+            self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key][self.antennas_dfs[antenna_key]['Visit Duration'] != 0]
+
+    def export_dataframes_to_excel(self):
+        """ Exports the current antenna_dfs to an excel file with a sheet for each dataframe """
+        pass

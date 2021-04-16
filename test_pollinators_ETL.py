@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pandas as pd
 import pytest
 
@@ -13,6 +15,16 @@ def df_round_truncate_ms() -> pd.DataFrame:
     return df
 
 
+@pytest.fixture
+def dict_of_dataframes() -> Dict[str, pd.DataFrame]:
+    """ Sample dictionary with three dataframes used to test _list_of_tags_with_all_antennas_visited() """
+    df_1 = pd.DataFrame({'DEC Tag ID': ["0001", "0002", "0004", "0005", "0006"]})
+    df_2 = pd.DataFrame({'DEC Tag ID': ["0001", "0002", "0002", "0002", "0006"]})
+    df_3 = pd.DataFrame({'DEC Tag ID': ["0001", "0003", "0003", "0003", "0006"]})
+    dict_of_dfs = {"df_1": df_1, "df_2": df_2, "df_3": df_3}
+    return dict_of_dfs
+
+
 ROUNDED_MILLISECONDS = [pd.Timestamp('2020-01-01 00:00:00'),
                         pd.Timestamp('2020-01-01 00:00:00'),
                         pd.Timestamp('2020-01-01 00:00:00'),
@@ -26,6 +38,8 @@ TRUNCATED_MILLISECONDS = [pd.Timestamp('2020-01-01 00:00:00'),
                           pd.Timestamp('2020-01-01 00:00:01'),
                           pd.Timestamp('2020-01-01 00:00:02'),
                           pd.Timestamp('2020-01-01 00:00:03')]
+
+TAG_IDS_IN_ALL_DATAFRAMES = {"0001", "0006"}
 
 
 def test_round_milliseconds(df_round_truncate_ms: pd.DataFrame):
@@ -43,3 +57,11 @@ def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     pipeline_for_testing = Pipeline("data/test_csv.csv")
     pipeline_for_testing._truncate_milliseconds(df_round_truncate_ms, "time")
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
+
+
+def test__list_of_tags_with_all_antennas_visited(dict_of_dataframes: Dict[str, pd.DataFrame]):
+    pipeline_for_testing = Pipeline("data/test_csv.csv")
+    df = pd.concat(dict_of_dataframes.values())
+    all_tag_ids = df['DEC Tag ID'].unique().tolist()
+    assert pipeline_for_testing._list_of_tags_with_all_antennas_visited(all_tag_ids,
+                                                                        dict_of_dataframes) == TAG_IDS_IN_ALL_DATAFRAMES

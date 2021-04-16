@@ -8,6 +8,9 @@ filter_start_datetime = input("Start date and time for filtering the dataset. Us
 filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
                             "\nLeave this input blank if you don't want to filter by date: ")
 
+min_visit_time = int(input(
+    "Choose them minimum time in seconds that is considered to be the same visit between a signal and the next: ") or 7)
+
 round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps: ") or "1"
 
 all_antennas_visited = input("Choose to include all pollinators (1, default) or only those that have "
@@ -15,5 +18,12 @@ all_antennas_visited = input("Choose to include all pollinators (1, default) or 
 
 pipeline_1 = Pipeline("data/Rawdata_enero.csv")
 
-print(pipeline_1.run_pipeline(7, filter_start_datetime, filter_end_datetime, round_or_truncate,
-                      all_antennas_visited)["antenna_1"])
+pipeline_1.run_pipeline(min_visit_time, filter_start_datetime, filter_end_datetime, round_or_truncate,
+                        all_antennas_visited)
+
+pipeline_1.simplify_dataframes()
+
+print(pipeline_1.antennas_dfs["antenna_1"])
+
+# pipeline_1.concatenate_antennas_dfs(["antenna_1", "antenna_2"])
+# print(pipeline_1.antennas_dfs["antenna_1_antenna_2"])
