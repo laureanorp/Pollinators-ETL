@@ -10,7 +10,7 @@ class Pipeline:
 
     def __init__(self, path_to_csv: str):
         self.path_to_csv = path_to_csv
-        self.min_visit_time = None
+        self.max_visit_duration = None
         self.filter_start_datetime = None
         self.filter_end_datetime = None
         self.round_or_truncate = None
@@ -82,7 +82,7 @@ class Pipeline:
         # It has to be the same Tag ID and a visit between 1 and 7 seconds
         antenna_df['Valid Visits'] = 0
         antenna_df['Valid Visits'] = np.where((antenna_df['Time Delta'] > 0) &
-                                              (antenna_df['Time Delta'] <= self.min_visit_time) &
+                                              (antenna_df['Time Delta'] <= self.max_visit_duration) &
                                               (antenna_df['DEC Tag ID'] == antenna_df['DEC Tag ID'].shift(1)),
                                               antenna_df['Time Delta'], 0)
 
@@ -151,7 +151,7 @@ class Pipeline:
                      round_or_truncate: str, all_antennas_visited: str):
         """ Main function of the class, runs all the pipeline steps and returns a dict of dataframes """
 
-        self.min_visit_time = min_visit_time
+        self.max_visit_duration = min_visit_time
         self.filter_start_datetime = filter_start_datetime
         self.filter_end_datetime = filter_end_datetime
         self.round_or_truncate = round_or_truncate

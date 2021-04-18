@@ -8,8 +8,8 @@ filter_start_datetime = input("Start date and time for filtering the dataset. Us
 filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
                             "\nLeave this input blank if you don't want to filter by date: ")
 
-min_visit_time = int(input(
-    "Choose them minimum time in seconds that is considered to be the same visit between a signal and the next: ") or 7)
+max_visit_duration = int(input(
+    "Choose them maximum time in seconds that is considered to be the same visit between a signal and the next: ") or 7)
 
 round_or_truncate = input("Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps: ") or "1"
 
@@ -17,11 +17,11 @@ all_antennas_visited = input("Choose to include all pollinators (1, default) or 
                              "visited all antennas of the experiment (2): ") or "1"
 
 # Instance the Pipeline class
-pipeline_1 = Pipeline("data/Rawdata_enero.csv")
+pipeline_1 = Pipeline("imports/Rawdata_enero.csv")
 
 
 # Run the main process of the pipeline
-pipeline_1.run_pipeline(min_visit_time, filter_start_datetime, filter_end_datetime, round_or_truncate,
+pipeline_1.run_pipeline(max_visit_duration, filter_start_datetime, filter_end_datetime, round_or_truncate,
                         all_antennas_visited)
 
 # Remove unnecessary columns and rows
@@ -29,7 +29,7 @@ pipeline_1.simplify_dataframes()
 
 print(pipeline_1.antennas_dfs["antenna_1"])
 
-#Export antennas_dfs to an excel file
+# Export antennas_dfs to an excel file
 pipeline_1.export_dataframes_to_excel()
 
 pipeline_1.plot_avg_visit_duration()

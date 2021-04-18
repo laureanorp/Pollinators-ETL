@@ -9,6 +9,8 @@ verify_ssl = true
 pandas = "*"
 ipython = "*"
 matplotlib = "*"
+flask = "*"
+
 
 [requires]
 python_version = "3.9"
