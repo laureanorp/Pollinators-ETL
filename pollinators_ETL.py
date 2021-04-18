@@ -16,6 +16,7 @@ class Pipeline:
         self.round_or_truncate = None
         self.all_antennas_visited = None
         self.antennas_dfs = None
+        self.df = None
 
     def _csv_to_dataframe(self, path_to_csv) -> pd.DataFrame:
         """ Imports the CSV file containing all the data from BioMark """
@@ -100,17 +101,17 @@ class Pipeline:
 
         return antenna_df
 
-    def plot_avg_visit_duration(self, antennas_dfs: Dict[str, pd.DataFrame]):
+    def plot_avg_visit_duration(self):
         """
         Calculates the mean of no null visit durations for each antenna
         Then plots that average duration for each antenna using a bar plot
         """
         list_of_means = []
-        for antenna_key, antenna_df in antennas_dfs.items():
+        for antenna_key, antenna_df in self.antennas_dfs.items():
             no_null = antenna_df[antenna_df["Visit Duration"] != 0]
             list_of_means.append(no_null["Visit Duration"].mean())
         plt.figure()
-        plt.bar(antennas_dfs.keys(), list_of_means)
+        plt.bar(self.antennas_dfs.keys(), list_of_means)
         plt.title("Average visit duration for each antenna")
         plt.xlabel("Antennas")
         plt.ylabel("Seconds")
@@ -156,13 +157,13 @@ class Pipeline:
         self.round_or_truncate = round_or_truncate
         self.all_antennas_visited = all_antennas_visited
 
-        df = self._csv_to_dataframe(self.path_to_csv)
-        df = self._delete_unused_columns(df, ['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
+        self.df = self._csv_to_dataframe(self.path_to_csv)
+        self.df = self._delete_unused_columns(self.df, ['Download Date', 'Download Time', 'Reader ID', 'HEX Tag ID',
                                               'Temperature,C', 'Signal,mV', 'Is Duplicate'])
         # Create a list of unique Tag IDs to use in other functions
-        all_tag_ids = df['DEC Tag ID'].unique().tolist()
+        all_tag_ids = self.df['DEC Tag ID'].unique().tolist()
         # Create dataframes for each antenna
-        self.antennas_dfs = self._create_dict_of_antennas_dfs(df)
+        self.antennas_dfs = self._create_dict_of_antennas_dfs(self.df)
         # Create list of good visitors (Tag IDs with all antennas are visited)
         list_of_good_visitors = self._list_of_tags_with_all_antennas_visited(all_tag_ids, self.antennas_dfs)
         # Apply all the necessary functions to the antennas data frames
@@ -195,6 +196,14 @@ class Pipeline:
             self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key].drop(columns='Time Delta')
             self.antennas_dfs[antenna_key] = self.antennas_dfs[antenna_key][
                 self.antennas_dfs[antenna_key]['Visit Duration'] != 0]
+
+    # TODO fix: not working because self.df is defined inside run_pipeline()
+    def remove_pollinators_manually(self, pollinators_to_remove: List[str]):
+        """
+        Given a list of pollinators, removes them completely from the main dataset
+        Requires running Pipeline.run_pipeline() after
+        """
+        self.df = self.df[~self.df['DEC Tag ID'].isin(pollinators_to_remove)]
 
     def export_dataframes_to_excel(self):
         """ Exports the current antenna_dfs to an excel file with a sheet for each dataframe """
