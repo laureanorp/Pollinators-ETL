@@ -1,11 +1,14 @@
+import os
+
 from flask import Flask, render_template, request, redirect, url_for
 
+# from werkzeug import secure_filename
+
+
+UPLOAD_FOLDER = "server_uploads"
+
 app = Flask(__name__)
-
-
-@app.route('/hello', methods=['GET'])
-def hello():
-    return "<h1>Just: Hello</h1>"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/home')
@@ -21,8 +24,9 @@ def success(name):
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
     if request.method == 'POST':
-        form_text = request.form['name_textbox']
-        return redirect(url_for('success', name=form_text))
+        f = request.files['csv_file']
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], f.filename))
+        return redirect(url_for('success', name=f.filename))
 
 
 if __name__ == '__main__':
