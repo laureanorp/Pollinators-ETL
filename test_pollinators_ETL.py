@@ -48,14 +48,14 @@ def test_round_milliseconds(df_round_truncate_ms: pd.DataFrame):
     Including extreme cases like 0.500ms
     """
     pipeline_for_testing = Pipeline("imports/test_csv.csv")
-    pipeline_for_testing._round_milliseconds(df_round_truncate_ms, "time")
+    pipeline_for_testing._round_milliseconds("time", df_round_truncate_ms)
     assert df_round_truncate_ms["time"].tolist() == ROUNDED_MILLISECONDS
 
 
 def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     """ Tests if milliseconds are being truncated correctly """
     pipeline_for_testing = Pipeline("imports/test_csv.csv")
-    pipeline_for_testing._truncate_milliseconds(df_round_truncate_ms, "time")
+    pipeline_for_testing._truncate_milliseconds("time", df_round_truncate_ms)
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
 
 
@@ -63,5 +63,5 @@ def test__list_of_tags_with_all_antennas_visited(dict_of_dataframes: Dict[str, p
     pipeline_for_testing = Pipeline("imports/test_csv.csv")
     df = pd.concat(dict_of_dataframes.values())
     all_tag_ids = df['DEC Tag ID'].unique().tolist()
-    assert pipeline_for_testing._list_of_tags_with_all_antennas_visited(all_tag_ids,
-                                                                        dict_of_dataframes) == TAG_IDS_IN_ALL_DATAFRAMES
+    pipeline_for_testing.antennas_dfs = dict_of_dataframes
+    assert pipeline_for_testing._list_of_tags_with_all_antennas_visited(all_tag_ids) == TAG_IDS_IN_ALL_DATAFRAMES

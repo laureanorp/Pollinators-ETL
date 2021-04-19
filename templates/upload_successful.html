@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Success</title>
+</head>
+
+<body>
+    <h1>{{ file_name }} was uploaded successfully.</h1>
+    <h1>Parameters for execution:</h1>
+
+    <form action = "http://localhost:5000/pipeline-results" method = "post">
+        <ul>
+            <li>
+                <label>
+                    Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format. Leave this input blank if you don't want to filter by date:
+                    <input type = "text" name = "filter_start_datetime" />
+                </label>
+            </li>
+            <li>
+                <label>
+                    End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format. Leave this input blank if you don't want to filter by date:
+                    <input type = "text" name = "filter_end_datetime" />
+                </label>
+            </li>
+            <li>
+                <label>
+                    Choose them maximum time in seconds that is considered to be the same visit between a signal and the next:
+                    <input type = "text" name = "max_visit_duration" />
+                </label>
+            <li>
+                <label>
+                    Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps:
+                    <input type = "text" name = "round_or_truncate" />
+                </label>
+            </li>
+            <li>
+                <label>
+                    Choose to include all pollinators (1, default) or only those that have visited all antennas of the experiment (2):
+                    <input type = "text" name = "all_antennas_visited" />
+                </label>
+            </li>
+        </ul>
+        <input type = "submit" value = "Run pipeline" />
+    </form>
+</body>
+</html>
