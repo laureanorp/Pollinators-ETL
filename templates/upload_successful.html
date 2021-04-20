@@ -10,7 +10,7 @@
     <h1>{{ file_name }} was uploaded successfully.</h1>
     <h1>Parameters for execution:</h1>
 
-    <form action = "http://localhost:5000/pipeline-results" method = "post">
+    <form action = "http://localhost:5000/run-pipeline/{{ file_name }}" method = "post">
         <ul>
             <li>
                 <label>
