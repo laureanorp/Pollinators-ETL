@@ -12,7 +12,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/home')
 def home():
-    return render_template('file_input.html')
+    return render_template('home.html')
 
 
 @app.route('/upload', methods=['POST', 'GET'])
@@ -20,7 +20,7 @@ def upload():
     if request.method == 'POST':
         csv_file = request.files['csv_file']
         csv_file.save(os.path.join(app.config['UPLOAD_FOLDER'], csv_file.filename))
-        return render_template('upload_successful.html', file_name=csv_file.filename)
+        return render_template('input_parameters.html', file_name=csv_file.filename)
 
 
 @app.route('/run-pipeline/<csv_file>', methods=['POST', 'GET'])
