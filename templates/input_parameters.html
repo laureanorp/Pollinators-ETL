@@ -40,33 +40,44 @@
                 <label>
                     Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format. Leave this input
                     blank if you don't want to filter by date:
-                    <input type="text" name="filter_start_datetime"/>
+                    <input class="form-control" type="text" placeholder="2021-01-31 15:30:59"
+                           aria-label="default input example" name="filter_start_datetime">
                 </label>
             </li>
             <li class="list-group-item">
                 <label>
                     End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format. Leave this input blank
                     if you don't want to filter by date:
-                    <input type="text" name="filter_end_datetime"/>
+                    <input class="form-control" type="text" placeholder="2021-02-15 15:30:59"
+                           aria-label="default input example" name="filter_end_datetime">
                 </label>
             </li>
             <li class="list-group-item">
                 <label>
                     Choose them maximum time in seconds that is considered to be the same visit between a signal and the
                     next:
-                    <input type="text" name="max_visit_duration"/>
+                    <input class="form-control" type="text" placeholder="Number >1"
+                           aria-label="default input example" name="max_visit_time">
                 </label>
             <li class="list-group-item">
                 <label>
-                    Choose to round (1, default), truncate (2) or leave (3) ms of the timestamps:
-                    <input type="text" name="round_or_truncate"/>
+                    Choose to round or truncate milliseconds of the timestamps:
+                    <select class="form-select" aria-label="Default select example" name="round_or_truncate">
+                        <option selected>Choose using this menu</option>
+                        <option value="1">Round milliseconds</option>
+                        <option value="2">Truncate milliseconds</option>
+                    </select>
                 </label>
             </li>
             <li class="list-group-item">
                 <label>
-                    Choose to include all pollinators (1, default) or only those that have visited all antennas of the
-                    experiment (2):
-                    <input type="text" name="all_antennas_visited"/>
+                    Choose to include all pollinators or only those that have visited all antennas of the
+                    experiment:
+                    <select class="form-select" aria-label="Default select example" name="all_antennas_visited">
+                        <option selected>Choose using this menu</option>
+                        <option value="1">Include all pollinators</option>
+                        <option value="2">Include only those that visited all antennas</option>
+                    </select>
                 </label>
             </li>
         </ul>

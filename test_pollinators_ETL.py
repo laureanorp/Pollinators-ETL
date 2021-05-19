@@ -25,6 +25,8 @@ def dict_of_dataframes() -> Dict[str, pd.DataFrame]:
     return dict_of_dfs
 
 
+TAG_IDS_IN_ALL_DATAFRAMES = {"0001", "0006"}
+
 ROUNDED_MILLISECONDS = [pd.Timestamp('2020-01-01 00:00:00'),
                         pd.Timestamp('2020-01-01 00:00:00'),
                         pd.Timestamp('2020-01-01 00:00:00'),
@@ -38,8 +40,6 @@ TRUNCATED_MILLISECONDS = [pd.Timestamp('2020-01-01 00:00:00'),
                           pd.Timestamp('2020-01-01 00:00:01'),
                           pd.Timestamp('2020-01-01 00:00:02'),
                           pd.Timestamp('2020-01-01 00:00:03')]
-
-TAG_IDS_IN_ALL_DATAFRAMES = {"0001", "0006"}
 
 
 def test_round_milliseconds(df_round_truncate_ms: pd.DataFrame):
@@ -59,9 +59,11 @@ def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
 
 
-def test__list_of_tags_with_all_antennas_visited(dict_of_dataframes: Dict[str, pd.DataFrame]):
+def test__list_of_tags_with_all_antennas_visited(dict_of_dataframes):
     pipeline_for_testing = Pipeline("imports/test_csv.csv")
     df = pd.concat(dict_of_dataframes.values())
     all_tag_ids = df['DEC Tag ID'].unique().tolist()
+    antennas_required = ["df_1", "df_2", "df_3"]
     pipeline_for_testing.antennas_dfs = dict_of_dataframes
-    assert pipeline_for_testing._list_of_tags_with_all_antennas_visited(all_tag_ids) == TAG_IDS_IN_ALL_DATAFRAMES
+    assert pipeline_for_testing._obtain_good_visitors(all_tag_ids,
+                                                      antennas_required) == TAG_IDS_IN_ALL_DATAFRAMES
