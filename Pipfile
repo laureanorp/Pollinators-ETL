@@ -10,7 +10,7 @@ pandas = "*"
 ipython = "*"
 matplotlib = "*"
 flask = "*"
-
+bokeh = "*"
 
 [requires]
 python_version = "3.9"
