@@ -8,9 +8,9 @@ import pandas as pd
 class Pipeline:
     """ Class that includes all the functions of the ETL pipeline """
 
-    def __init__(self, csv_paths: str):
+    def __init__(self, csv_files: List[str]):
         # Input for creating the initial dataframe
-        self.csv_paths = csv_paths
+        self.csv_files = csv_files
         self.parsed_dataframes = None
         self.antennas_info = None
         self.genotypes_of_each_experiment = None
@@ -102,8 +102,9 @@ class Pipeline:
     def _csv_files_to_dataframe(self) -> Dict[str, pd.DataFrame]:
         """ Given a list of csv files, creates a dict with the parsed dataframes """
         parsed_dataframes = {}
-        for count, csv_path in enumerate(self.csv_paths, start=1):
-            key_name = "df_" + str(count)
+        for csv_file in self.csv_files:
+            key_name = str(csv_file)
+            csv_path = "".join(["server_uploads/", csv_file])
             parsed_dataframes[key_name] = pd.read_csv(csv_path, sep=";",
                                                       dtype={"Scan Date": "object", "Scan Time": "object",
                                                              "Antenna ID": "int64", "DEC Tag ID": "object"},

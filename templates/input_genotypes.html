@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Laureano Ruiz Pérez">
     <meta name="author" content="">
-    <title>Bokeh Tests</title>
+    <title>Narrow Jumbotron Template for Bootstrap</title>
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
@@ -17,50 +17,46 @@
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-x.y.z.min.js"></script>
-    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-x.y.z.min.js"></script>
-    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-x.y.z.min.js"></script>
     <![endif]-->
 </head>
 
 <body>
 <div class="container">
     <div class="header clearfix">
-        <h3 class="text-muted">Bokeh Tests</h3>
+        <h3 class="text-muted">Project Name</h3>
     </div>
 
     <div class="jumbotron">
-        <h1>Bokeh tests</h1>
+        <h1>Genotypes</h1>
         <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus
             commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6">
-            {% include 'layout.html' %}
-        </div>
-        <div class="col-lg-6">
-            {% include 'layout.html' %}
-        </div>
-    </div>
+    <h4 class="text-center">{{ file_names|join(', ') }} successfully uploaded</h4>
 
-    <div class="row marketing">
-        <div class="col-lg-6">
-            <h4>Feature</h4>
-            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-            <h4>Other feature</h4>
-            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet
-                fermentum.</p>
-        </div>
+    <form action="http://localhost:5000/input-genotypes" method="post">
 
-        <div class="col-lg-6">
-            <h4>More features</h4>
-            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-            <h4>Even more</h4>
-            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet
-                fermentum.</p>
-        </div>
-    </div>
+        {% for file_name in file_names %}
+            <hr/>
+            <label for="basic-url" class="form-label">File "{{ file_name }}" has the following
+                antennas: {{ antennas_info[file_name]|join(', ') }}. Please define the genotype of each antenna for this
+                experiment.</label>
+            <div class="row">
+                {% for antenna in antennas_info[file_name] %}
+                     <div class="col-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon3">Antenna {{ antenna }}</span>
+                            <input type="text" class="form-control" id="basic-url" placeholder="Genotype name" aria-describedby="basic-addon3">
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <p class="text-center">
+            <input class="btn btn-lg btn-success" type="submit" value="Next"/>
+        </p>
+    </form>
 
     <footer class="footer">
         <p>&copy; 2021 Company · Project · Name</p>
@@ -68,3 +64,4 @@
 
 </div> <!-- /container -->
 </body>
+</html>

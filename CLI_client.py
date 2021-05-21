@@ -1,8 +1,8 @@
 from pollinators_ETL import Pipeline
 
 # Input variables that will be frontend UI elements (textbox, checkboxes, etc)
-csv_file_path = input("Enter path for csv file (relative to current dir): ") or ["imports/12-13.05CSV.csv",
-                                                                                 "imports/14-17.05.21CSV.csv"]
+csv_file_path = input("Enter path for csv file (relative to current dir): ") or ["12-13.05CSV.csv",
+                                                                                 "14-17.05.21CSV.csv"]
 
 # Parameters
 filter_start_datetime = input("Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."

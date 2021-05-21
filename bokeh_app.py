@@ -6,7 +6,7 @@ app = Flask(__name__)
 @app.route('/home')
 def home():
     """ Main home screen for the web app """
-    return render_template('bokeh.html')
+    return render_template('pipeline_results.html')
 
 
 if __name__ == '__main__':
