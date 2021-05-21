@@ -1,7 +1,8 @@
 from pollinators_ETL import Pipeline
 
 # Input variables that will be frontend UI elements (textbox, checkboxes, etc)
-csv_file_path = input("Enter path for csv file (relative to current dir): ") or "imports/Rawdata_enero.csv"
+csv_file_path = input("Enter path for csv file (relative to current dir): ") or ["imports/12-13.05CSV.csv",
+                                                                                 "imports/14-17.05.21CSV.csv"]
 
 # Parameters
 filter_start_datetime = input("Start date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
@@ -10,36 +11,46 @@ filter_start_datetime = input("Start date and time for filtering the dataset. Us
 filter_end_datetime = input("End date and time for filtering the dataset. Use YYYY-MM-DD hh:mm:ss format."
                             "\nLeave this input blank if you don't want to filter by date: ")
 
-max_visit_duration = input(
+max_time_between_signals = input(
     "Choose the maximum time in seconds that is considered to be the same visit between a signal and the next."
     "\nDefault is 7: ") or 7
 
 round_or_truncate = input("Choose to round (default), truncate: ") or "round"
 
 # Bad: "True" string is not True bool
-filter_tags_by_visited_antennas = input("Filter tags by visited antennas? (True/False): ") or False
-
-antennas_to_concat = input("Antennas to concat (python list format): ") or []
+filter_tags_by_visited_genotypes = input("Filter tags by visited antennas? (True/False): ") or False
 
 pollinators_to_remove = input("Pollinators to remove from the data: ") or []
 
-visited_antennas_required = input("Which antennas are required required? (python list format): ") or []
+visited_genotypes_required = input("Which antennas are required required? (python list format): ") or ["Genotype A", "Genotype B", "Genotype C"]
 
 flowers_per_antenna = input("Flowers per antenna: ") or 1
 
 # Instance the Pipeline class
 pipeline_1 = Pipeline(csv_file_path)
 
-# input parameters
-pipeline_1.input_parameters_of_run(max_visit_duration, filter_start_datetime, filter_end_datetime, round_or_truncate,
-                                   filter_tags_by_visited_antennas, antennas_to_concat, pollinators_to_remove,
-                                   visited_antennas_required, flowers_per_antenna)
+pipeline_1.preprocessing_of_data()
+
+# Input genotypes
+pipeline_1.input_genotypes_data([{1: "Genotype A", 3: "Genotype A", 4: "Genotype A", 6: "Genotype B", 9: "Genotype B",
+                                  10: "Genotype B", 12: "Genotype B", 13: "Genotype C", 14: "Genotype C",
+                                  15: "Genotype C", 16: "Genotype C"},
+                                 {2: "Genotype A", 5: "Genotype A", 6: "Genotype A", 9: "Genotype B", 14: "Genotype B",
+                                  15: "Genotype C", 16: "Genotype C"}])
+
+pipeline_1.add_genotypes_and_join_df()
+
+# Input parameters
+pipeline_1.input_parameters_of_run(max_time_between_signals, filter_start_datetime, filter_end_datetime,
+                                   round_or_truncate,
+                                   filter_tags_by_visited_genotypes, pollinators_to_remove,
+                                   visited_genotypes_required, flowers_per_antenna)
 
 # Run the main process of the pipeline
 pipeline_1.run_pipeline()
 
 # Some outputs for testing
-print(pipeline_1.antennas_dfs["antenna_1"])
+print(pipeline_1.genotypes_dfs["Genotype A"])
 # Export antennas_dfs to an excel file
 pipeline_1.export_dataframes_to_excel()
 pipeline_1.plot_avg_visit_duration()

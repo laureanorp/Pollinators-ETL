@@ -59,11 +59,10 @@ def test_truncate_milliseconds(df_round_truncate_ms: pd.DataFrame):
     assert df_round_truncate_ms["time"].tolist() == TRUNCATED_MILLISECONDS
 
 
-def test__list_of_tags_with_all_antennas_visited(dict_of_dataframes):
+def test__list_of_tags_with_all_genotypes_visited(dict_of_dataframes):
     pipeline_for_testing = Pipeline("imports/test_csv.csv")
     df = pd.concat(dict_of_dataframes.values())
     all_tag_ids = df['DEC Tag ID'].unique().tolist()
-    antennas_required = ["df_1", "df_2", "df_3"]
-    pipeline_for_testing.antennas_dfs = dict_of_dataframes
-    assert pipeline_for_testing._obtain_good_visitors(all_tag_ids,
-                                                      antennas_required) == TAG_IDS_IN_ALL_DATAFRAMES
+    genotypes_required = ["df_1", "df_2", "df_3"]
+    pipeline_for_testing.genotypes_dfs = dict_of_dataframes
+    assert pipeline_for_testing._obtain_good_visitors(all_tag_ids, genotypes_required) == TAG_IDS_IN_ALL_DATAFRAMES
