@@ -37,11 +37,10 @@ class Pipeline:
     def input_genotypes_data(self, genotypes_of_each_experiment):
         self.genotypes_of_each_experiment = genotypes_of_each_experiment
 
-    def input_parameters_of_run(self, max_time_between_signals: int, filter_start_datetime: str,
-                                filter_end_datetime: str,
-                                round_or_truncate: str, filter_tags_by_visited_genotypes: bool,
-                                pollinators_to_remove: List[str],
-                                visited_genotypes_required: List[str], flowers_per_antenna: int):
+    def input_parameters_of_run(self, filter_start_datetime: str, filter_end_datetime: str,
+                                max_time_between_signals: int, round_or_truncate: str,
+                                filter_tags_by_visited_genotypes: str, visited_genotypes_required: List[str],
+                                pollinators_to_remove: List[str], flowers_per_antenna: int):
         """ Method for introducing all the necessary parameters for the pipeline run """
         self.max_time_between_signals = max_time_between_signals
         self.filter_start_datetime = filter_start_datetime
@@ -69,7 +68,7 @@ class Pipeline:
         # Create dataframes for each genotype
         self.genotypes_dfs = self._create_dict_of_genotypes_dfs()
         # Create list of good visitors (Tag IDs with all the required genotypes visited)
-        if self.filter_tags_by_visited_genotypes:
+        if self.filter_tags_by_visited_genotypes == "True":
             self.list_of_good_visitors = self._obtain_good_visitors(all_tag_ids, self.visited_genotypes_required)
         # Apply all the necessary functions to the genotypes data frames
         self.genotypes_dfs = self._process_all_genotypes_dfs()
@@ -223,7 +222,7 @@ class Pipeline:
         for genotype_key, genotype_df in self.genotypes_dfs.items():
 
             # Filter dataframe values by removing those "not good" tag IDs
-            if self.filter_tags_by_visited_genotypes:
+            if self.filter_tags_by_visited_genotypes == "True":
                 genotype_df = genotype_df[genotype_df['DEC Tag ID'].isin(self.list_of_good_visitors)]
             # Parse scan dates and times manually after reading the CSV
             genotype_df['Scan Date and Time'] = pd.to_datetime(genotype_df['Scan Date'] + ' ' +

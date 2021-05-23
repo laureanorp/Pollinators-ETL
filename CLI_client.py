@@ -17,12 +17,13 @@ max_time_between_signals = input(
 
 round_or_truncate = input("Choose to round (default), truncate: ") or "round"
 
-# Bad: "True" string is not True bool
-filter_tags_by_visited_genotypes = input("Filter tags by visited antennas? (True/False): ") or False
+filter_tags_by_visited_genotypes = input("Filter tags by visited antennas? (True/False): ") or "False"
 
 pollinators_to_remove = input("Pollinators to remove from the data: ") or []
 
-visited_genotypes_required = input("Which antennas are required required? (python list format): ") or ["Genotype A", "Genotype B", "Genotype C"]
+visited_genotypes_required = input("Which antennas are required required? (python list format): ") or ["Genotype A",
+                                                                                                       "Genotype B",
+                                                                                                       "Genotype C"]
 
 flowers_per_antenna = input("Flowers per antenna: ") or 1
 
@@ -41,10 +42,9 @@ pipeline_1.input_genotypes_data([{1: "Genotype A", 3: "Genotype A", 4: "Genotype
 pipeline_1.add_genotypes_and_join_df()
 
 # Input parameters
-pipeline_1.input_parameters_of_run(max_time_between_signals, filter_start_datetime, filter_end_datetime,
-                                   round_or_truncate,
-                                   filter_tags_by_visited_genotypes, pollinators_to_remove,
-                                   visited_genotypes_required, flowers_per_antenna)
+pipeline_1.input_parameters_of_run(filter_start_datetime, filter_end_datetime, max_time_between_signals,
+                                   round_or_truncate, filter_tags_by_visited_genotypes, visited_genotypes_required,
+                                   pollinators_to_remove, flowers_per_antenna)
 
 # Run the main process of the pipeline
 pipeline_1.run_pipeline()
