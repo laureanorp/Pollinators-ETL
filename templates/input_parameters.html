@@ -23,15 +23,15 @@
 <body>
 <div class="container">
     <nav class="navbar navbar-light">
-        <h3 class="text-muted">Project Name</h3>
+        <h3 class="text-muted">RFID Pollinators</h3>
         <a class="inline btn btn-outline-secondary" href="http://localhost:5000/home" role="button">Home</a>
     </nav>
     <hr class="mb-5"/>
 
     <div class="jumbotron">
         <h1>Parameters</h1>
-        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus
-            commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+        <p class="lead">The final step consists on introducing the parameters that will be used to process all the data.
+            Some of them are optional. Depending on this parameters, final results will vary.</p>
     </div>
 
     <form action="http://localhost:5000/view-results" method="post" class="needs-validation" novalidate>
@@ -39,16 +39,19 @@
         <label for="start_date_filter" class="form-label">Start date and time for filtering the dataset.</label>
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon3">Start date</span>
-            <input type="datetime-local" id="start_date_filter" name="start_date_filter" value="2021-01-01T00:00" min="2010-01-01T00:00" max="2050-01-01T00:00">
+            <input type="datetime-local" id="start_date_filter" name="start_date_filter" value="2021-01-01T00:00"
+                   min="2010-01-01T00:00" max="2050-01-01T00:00">
         </div>
 
         <label for="end_date_filter" class="form-label">End date and time for filtering the dataset.</label>
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon3">End date</span>
-            <input type="datetime-local" id="end_date_filter" name="end_date_filter" value="2021-01-01T00:00" min="2010-01-01T00:00" max="2050-01-01T00:00">
+            <input type="datetime-local" id="end_date_filter" name="end_date_filter" value="2021-01-01T00:00"
+                   min="2010-01-01T00:00" max="2050-01-01T00:00">
         </div>
 
-        <label for="max_time_between_signals" class="form-label">Choose the maximum time in seconds that is considered to be the same
+        <label for="max_time_between_signals" class="form-label">Choose the maximum time in seconds that is considered
+            to be the same
             visit between a signal and the
             next.</label>
         <div class="input-group has-validation">
@@ -56,7 +59,7 @@
             <input type="text" class="form-control" id="max_time_between_signals" placeholder="Number <1"
                    aria-describedby="basic-addon3" name="max_time_between_signals" required>
             <div class="invalid-feedback">
-            Please write a valid number
+                Please write a valid number
             </div>
         </div>
 
@@ -70,13 +73,14 @@
 
         <label class="form-label">Filter tags by genotypes visited?</label>
         <div class="input-group mb-3 has-validation">
-            <select class="form-select" aria-label="Default select example" name="filter_tags_by_visited_genotypes" required>
+            <select class="form-select" aria-label="Default select example" name="filter_tags_by_visited_genotypes"
+                    required>
                 <option selected value="False">No, include all pollinators of the data</option>
                 <option value="True">Yes</option>
             </select>
         </div>
 
-         <label for="visited_genotypes_required" class="form-label">Visited genotypes required</label>
+        <label for="visited_genotypes_required" class="form-label">Visited genotypes required</label>
         <div class="input-group mb-3">
             <span class="input-group-text" id="basic-addon3">Visited genotypes required</span>
             <input type="text" class="form-control" id="visited_genotypes_required" placeholder="Python list (WIP)"
@@ -107,26 +111,26 @@
     </form>
 
     <footer class="footer">
-        <p>&copy; 2021 Company · Project · Name</p>
+        <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
     </footer>
 
     <script>
         // Example starter JavaScript for disabling form submissions if there are invalid fields
         (function () {
-          'use strict'
-          // Fetch all the forms we want to apply custom Bootstrap validation styles to
-          var forms = document.querySelectorAll('.needs-validation')
-          // Loop over them and prevent submission
-          Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-              form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                  event.preventDefault()
-                  event.stopPropagation()
-                }
-                form.classList.add('was-validated')
-              }, false)
-            })
+            'use strict'
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
         })()
     </script>
 </div> <!-- /container -->

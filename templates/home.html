@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Laureano Ruiz Pérez">
     <meta name="author" content="">
-    <title>Pollinatores Pipeline</title>
+    <title>Bumblebee Pipeline</title>
     <!-- Bootstrap core CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
@@ -23,15 +23,17 @@
 <body>
 <div class="container">
     <nav class="navbar navbar-light">
-        <h3 class="text-muted">Project Name</h3>
+        <h3 class="text-muted">RFID Pollinators</h3>
     </nav>
     <hr class="mb-5"/>
 
     <div class="jumbotron">
-        <h1>Pipeline Name</h1>
-        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus
-            commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-        <form action="http://localhost:5000/input-genotypes" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <h1>RFID Pollinators</h1>
+        <p class="lead">This pipeline produces useful charts and statistics based on experiments using Biomark hardware
+            and RFID antennas. Signal information is analyzed, processed and categorized based on the user's input
+            parameters. Start by choosing one or more CSV files.</p>
+        <form action="http://localhost:5000/input-genotypes" method="post" enctype="multipart/form-data"
+              class="needs-validation" novalidate>
             <div class="center has-validation">
                 <input type="file" accept=".csv" class="form-control" name="csv_files" multiple required>
                 <div class="invalid-feedback">
@@ -44,43 +46,41 @@
 
     <div class="row marketing">
         <div class="col-lg-6">
-            <h4>Feature</h4>
-            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-            <h4>Other feature</h4>
-            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet
-                fermentum.</p>
+            <h4>Straightforward</h4>
+            <p>Define the genotypes for each antenna, specify a few parameters and get the results in seconds.</p>
+             <h4>Versatile</h4>
+            <p>Accepts as many antennas on the experiment as necessary. Accepts rotations of the antennas when loading several experiments.</p>
         </div>
 
         <div class="col-lg-6">
-            <h4>More features</h4>
-            <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-            <h4>Even more</h4>
-            <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet
-                fermentum.</p>
+            <h4>Fast</h4>
+            <p>Based on Pandas and NumPy, two of the fastest and more efficient libraries for data analysis with Python.</p>
+            <h4>Paper-ready results</h4>
+            <p>Graphs are interactive and can be downloaded; and all processed data can be viewed and downloaded if necessary.</p>
         </div>
     </div>
 
     <footer class="footer">
-        <p>&copy; 2021 Company · Project · Name</p>
+        <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
     </footer>
 
     <script>
         // Example starter JavaScript for disabling form submissions if there are invalid fields
         (function () {
-          'use strict'
-          // Fetch all the forms we want to apply custom Bootstrap validation styles to
-          var forms = document.querySelectorAll('.needs-validation')
-          // Loop over them and prevent submission
-          Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-              form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                  event.preventDefault()
-                  event.stopPropagation()
-                }
-                form.classList.add('was-validated')
-              }, false)
-            })
+            'use strict'
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
         })()
     </script>
 </div> <!-- /container -->
