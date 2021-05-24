@@ -3,7 +3,8 @@ from typing import List, Dict
 
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
-from pollinators_ETL import Pipeline
+
+from pollinators_ETL import Pipeline, Plot
 
 UPLOAD_FOLDER = "server_uploads"
 
@@ -35,8 +36,8 @@ def home():
     return render_template('home.html')
 
 
-@app.route('/upload', methods=['POST', 'GET'])
-def upload():
+@app.route('/input-genotypes', methods=['POST', 'GET'])
+def upload_files():
     """ File uploader that supports multiple files """
     file_names = []
     if request.method == 'POST':
@@ -49,18 +50,19 @@ def upload():
         pipeline = Pipeline(file_names)
         pipeline.preprocessing_of_data()
         antennas_info = pipeline.antennas_info
+        dates = pipeline.dates_of_dfs
+        return render_template('input_genotypes.html', file_names=file_names, dates=dates,
+                               antennas_info=antennas_info)
+    if request.method == 'GET':
+        file_names = pipeline.csv_files  # TODO how to avoid this?
+        antennas_info = pipeline.antennas_info
         return render_template('input_genotypes.html', file_names=file_names,
-                               antennas_info=antennas_info)  # TODO extract date from df
-    if request.method == 'GET':  # TODO what goes here?
-        csv_files = request.files.getlist('csv_files')
-        for file in csv_files:
-            secure_file_name = secure_filename(file.filename)
-            file_names.append(secure_file_name)
-        return render_template('input_genotypes.html', file_name=file_names)
+                               antennas_info=antennas_info)
 
 
-@app.route('/input-genotypes', methods=['POST', 'GET'])
-def input_genotypes():
+@app.route('/input_parameters', methods=['POST', 'GET'])
+def send_genotypes():
+    """ Posts the data for the genotypes and returns the template for input parameters """
     if request.method == 'POST':
         genotypes = genotypes_form_to_list(request.form)
         pipeline.input_genotypes_data(
@@ -75,8 +77,9 @@ def input_genotypes():
         return render_template('input_parameters.html')
 
 
-@app.route('/input-parameters', methods=['POST', 'GET'])
-def input_parameters():
+@app.route('/view-results', methods=['POST', 'GET'])
+def send_parameters_and_run():
+    """ Posts the parameters data and returns the pipeline results """
     if request.method == 'POST':
         # Introduce the parameters of the pipeline
         parameters = [request.form["start_date_filter"], request.form["end_date_filter"],
@@ -86,6 +89,8 @@ def input_parameters():
         pipeline.input_parameters_of_run("", "", 7, "round", "True", [], [], 1)  # TODO parameters
         # Run the main process of the pipeline
         pipeline.run_pipeline()
+        plots = Plot(pipeline.genotypes_dfs)
+        plots.lay_out_plots_to_html()
         return render_template('pipeline_results.html')
     elif request.method == 'GET':
         return render_template('pipeline_results.html')

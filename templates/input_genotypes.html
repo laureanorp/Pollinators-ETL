@@ -36,11 +36,11 @@
 
     <h5 class="text-center">{{ file_names|join(', ') }} successfully uploaded</h5>
 
-    <form action="http://localhost:5000/input-genotypes" method="post" class="needs-validation" novalidate>
+    <form action="http://localhost:5000/input_parameters" method="post" class="needs-validation" novalidate>
         {% for file_name in file_names %}
             <hr/>
-            <label for="genotypes" class="form-label">File "{{ file_name }}" has the following
-                antennas. Please define the genotype of each antenna for this experiment.</label>
+            <label for="genotypes" class="form-label">File "{{ file_name }}" includes the experiment that started on {{ dates[file_name][0] }} and
+                finished on {{ dates[file_name][1] }}. Please define the genotype of each antenna for this experiment.</label>
             <div class="row">
                 {% for antenna in antennas_info[file_name] %}
                     <div class="col-6">

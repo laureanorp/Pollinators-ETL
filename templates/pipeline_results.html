@@ -34,16 +34,24 @@
             commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
     </div>
 
-    <h5>Pipeline finished successfully</h5>
-    <h5>Results will appear here (WIP)</h5>
+    <h5 class="text-center">Pipeline finished successfully</h5>
+    <hr/>
 
     <div class="row">
-        <div class="col-lg-6">
-            {% include 'layout.html' %}
-        </div>
-        <div class="col-lg-6">
-            {% include 'layout.html' %}
-        </div>
+        {% include 'layout.html' %}
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <a class="btn btn-lg btn-outline-success m-3" href="http://localhost:5000/input-genotypes" role="button">Download
+            excel</a>
+        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
+            dataset X</a>
+        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
+            dataset X</a>
+    </div>
+    <div class="d-flex justify-content-center">
+        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes"
+           role="button">Back</a>
     </div>
 
     <footer class="footer">

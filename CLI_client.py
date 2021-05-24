@@ -1,4 +1,4 @@
-from pollinators_ETL import Pipeline
+from pollinators_ETL import Pipeline, Plot
 
 # Input variables that will be frontend UI elements (textbox, checkboxes, etc)
 csv_file_path = input("Enter path for csv file (relative to current dir): ") or ["12-13.05CSV.csv",
@@ -52,5 +52,8 @@ pipeline_1.run_pipeline()
 # Some outputs for testing
 print(pipeline_1.genotypes_dfs["Genotype A"])
 # Export antennas_dfs to an excel file
-pipeline_1.export_dataframes_to_excel()
-pipeline_1.plot_avg_visit_duration()
+# pipeline_1.export_dataframes_to_excel()
+# pipeline_1.plot_avg_visit_duration()
+
+plots_1 = Plot(pipeline_1.genotypes_dfs)
+plots_1.lay_out_plots_to_html()

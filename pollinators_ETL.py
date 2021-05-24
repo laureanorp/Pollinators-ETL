@@ -3,6 +3,11 @@ from typing import List, Dict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from bokeh.embed import file_html
+from bokeh.io import output_file
+from bokeh.layouts import layout
+from bokeh.plotting import figure
+from bokeh.resources import CDN
 
 
 class Pipeline:
@@ -13,6 +18,7 @@ class Pipeline:
         self.csv_files = csv_files
         self.parsed_dataframes = None
         self.antennas_info = None
+        self.dates_of_dfs = None
         self.genotypes_of_each_experiment = None
         self.df_with_genotypes = None
         # Parameters for pipeline run
@@ -33,6 +39,7 @@ class Pipeline:
         """ Calls the csv parser function and exports the antennas of each dataframe """
         self.parsed_dataframes = self._csv_files_to_dataframe()
         self.antennas_info = self._export_antennas_info()
+        self.dates_of_dfs = self._export_dates_info()
 
     def input_genotypes_data(self, genotypes_of_each_experiment):
         self.genotypes_of_each_experiment = genotypes_of_each_experiment
@@ -117,6 +124,13 @@ class Pipeline:
             antennas = sorted(self.parsed_dataframes[key]['Antenna ID'].unique().tolist())
             antennas_of_each_dataframe[key] = antennas
         return antennas_of_each_dataframe
+
+    def _export_dates_info(self) -> Dict[str, List[str]]:
+        dates_of_dfs = {}
+        for key in self.parsed_dataframes:
+            dates_of_dfs[key] = [self.parsed_dataframes[key]['Scan Date'].iloc[0],
+                                 self.parsed_dataframes[key]['Scan Date'].iloc[-1]]
+        return dates_of_dfs
 
     # TODO fix parsed_dataframes is being modified (it has genotypes column and it shouldn't)
     def _add_genotypes_column(self, dict_of_dfs: Dict[str, pd.DataFrame]):
@@ -267,4 +281,66 @@ class Plot:
     Class that includes methods for generating plots using the class Pipeline results.
     Is this collection of methods, Bokeh is used to generate HTML plots that are later included in the Flask app.
     """
-    pass
+
+    def __init__(self, genotypes_dfs: Dict[str, pd.DataFrame]):
+        # Input for creating the initial dataframe
+        self.genotypes_dfs = genotypes_dfs
+
+    def lay_out_plots_to_html(self):
+        # Save results to an HTML file
+        output_file("templates/layout.html")
+
+        html = file_html(layout([
+            [self._plot_visits_per_genotype()],
+            [self._plot_visits_per_genotype(), self._plot_visits_per_genotype()],
+            [self._plot_visits_per_genotype()],
+        ]), CDN)
+
+        file = open("templates/layout.html", "w+")
+        file.write(html)
+        file.close()
+
+    def _plot_visits_per_genotype(self):
+        output_file("templates/visits_per_genotype.html")
+
+        genotypes = []
+        visits = []
+        for key in self.genotypes_dfs:
+            genotypes.append(key)
+            visits.append(self.genotypes_dfs[key].size)
+
+        plot = figure(x_range=genotypes, plot_height=250, title="Number of visits per genotype",
+                      toolbar_location=None, tools="", sizing_mode="stretch_both")
+        plot.vbar(x=genotypes, top=visits, width=0.9)
+        plot.xgrid.grid_line_color = None
+        plot.y_range.start = 0
+
+        return plot
+
+    def _plot_visit_duration_per_genotype(self):
+        output_file("templates/visit_duration_per_genotype.html")
+
+        genotypes = []
+        means = []
+        for key in self.genotypes_dfs:
+            genotypes.append(key)
+            means.append(self.genotypes_dfs[key]["Visit Duration"].mean())
+
+        plot = figure(x_range=genotypes, plot_height=250, title="Average duration of visits per genotype",
+                      toolbar_location=None, tools="")
+        plot.vbar(x=genotypes, top=means, width=0.9)
+        plot.xgrid.grid_line_color = None
+        plot.y_range.start = 0
+
+        # Save results to an HTML file
+        html = file_html(plot, CDN)
+        file = open("templates/visit_duration_per_genotype.html", "x")  # x = create file
+        file.write(html)
+        file.close()
+
+    def _average_visit_duration(self) -> int:
+        # Not per genotype, avg of whole dataset
+        dataframes = list(self.genotypes_dfs.values())
+        whole_dataframe = pd.concat(dataframes)
+        mean = round(whole_dataframe["Visit Duration"].mean(), 2)
+        return mean

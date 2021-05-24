@@ -34,7 +34,7 @@
             commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
     </div>
 
-    <form action="http://localhost:5000/input-parameters" method="post" class="needs-validation" novalidate>
+    <form action="http://localhost:5000/view-results" method="post" class="needs-validation" novalidate>
         <hr/>
         <label for="start_date_filter" class="form-label">Start date and time for filtering the dataset.</label>
         <div class="input-group mb-3">
@@ -93,7 +93,7 @@
         <label for="flowers_per_antenna" class="form-label">Flowers per antenna.</label>
         <div class="input-group mb-3 has-validation">
             <span class="input-group-text" id="basic-addon3">Flowers per antenna</span>
-            <input type="text" class="form-control" id="flowers_per_antenna" placeholder="Number <1"
+            <input type="text" class="form-control" id="flowers_per_antenna" placeholder="Number <=1"
                    aria-describedby="basic-addon3" name="flowers_per_antenna" required>
             <div class="invalid-feedback">
                 Please write a valid number
@@ -101,7 +101,7 @@
         </div>
 
         <div class="d-flex justify-content-center">
-            <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/upload" role="button">Back</a>
+            <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">Back</a>
             <input class="btn btn-lg btn-success m-3" type="submit" value="Run pipeline"/>
         </div>
     </form>
