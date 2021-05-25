@@ -8,11 +8,13 @@ from bokeh.io import output_file
 from bokeh.layouts import layout
 from bokeh.models import (BasicTicker, ColorBar, ColumnDataSource,
                           LinearColorMapper, PrintfTickFormatter, )
-from bokeh.palettes import d3
+from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
-from bokeh.transform import transform
 from bokeh.sampledata.unemployment1948 import data as data_heat_map
+from bokeh.transform import transform
+from math import pi
+
 
 class Pipeline:
     """ Class that includes all the functions of the ETL pipeline """
@@ -296,6 +298,7 @@ class Plot:
         output_file("templates/layout.html")
         html = file_html(layout([
             [self._plot_visits_per_genotype()],
+            [self._plot_visits_cumsum_per_genotype()],
             [self._plot_visit_duration_per_genotype()],
             [self._plot_visit_duration_per_pollinator()],
             [self._plot_visit_cumsum_per_pollinator()],
@@ -308,32 +311,82 @@ class Plot:
         self.stats = {"average_visit_duration": self._average_visit_duration()}
 
     def _plot_visits_per_genotype(self):
+        """ Returns a plot with the total number visits for each genotype """
         genotypes = []
         visits = []
         for key in self.genotypes_dfs:
             genotypes.append(key)
             visits.append(self.genotypes_dfs[key].size)
-        plot = figure(x_range=genotypes, plot_height=250, title="Number of visits per genotype",
-                      toolbar_location=None, tools="", sizing_mode="fixed")
-        plot.vbar(x=genotypes, top=visits, width=0.9)
+        data = {'genotypes': genotypes,
+                'visits': visits,
+                'color': viridis(len(genotypes))}  # TODO palette limited to 256 colors. Need to cycle
+        source = ColumnDataSource(data=data)
+        sorted_genotypes = sorted(genotypes, key=lambda x: visits[genotypes.index(x)])
+        plot = figure(x_range=sorted_genotypes, plot_height=400, title="Number of visits per genotype",
+                      tools="pan, wheel_zoom, box_zoom, reset, save",
+                      tooltips=[("Genotype", "@genotypes"), ("Total visits", "@visits")], toolbar_sticky=False)
+        plot.vbar(x="genotypes", top="visits", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
+        return plot
+
+    def _plot_visits_cumsum_per_genotype(self):
+        """ Returns a plot with the total duration of all visits for each genotype """
+        dataframes = list(self.genotypes_dfs.values())
+        whole_dataframe = pd.concat(dataframes)
+        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
+        genotypes = whole_dataframe['Genotype'].unique().tolist()
+        data = {"genotypes": genotypes}
+        colors = list(viridis(len(pollinators)))
+        for pollinator in pollinators:
+            list_of_data = []
+            for genotype in genotypes:
+                series_for_sum = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
+                series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
+                list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
+            data[pollinator] = list_of_data
+        plot = figure(x_range=genotypes, plot_height=400, title="Total duration (sum) of all visits per genotype",
+                      tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="$name: @$name sec",
+                      toolbar_sticky=False)
+        plot.vbar_stack(pollinators, x='genotypes', width=0.9, color=colors, source=data,
+                        legend_label=pollinators)
+        plot.y_range.start = 0
+        plot.x_range.range_padding = 0.1
+        plot.xgrid.grid_line_color = None
+        plot.axis.minor_tick_line_color = None
+        plot.outline_line_color = None
+        plot.legend.location = "top_right"
+        plot.legend.background_fill_alpha = 0.8
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
         return plot
 
     def _plot_visit_duration_per_genotype(self):
+        """ Returns a plot with the average visit duration for each genotype """
         genotypes = []
         means = []
         for key in self.genotypes_dfs:
             genotypes.append(key)
             means.append(self.genotypes_dfs[key]["Visit Duration"].mean())
-        plot = figure(x_range=genotypes, plot_height=250, title="Average duration of visits per genotype",
-                      toolbar_location=None, tools="")
-        plot.vbar(x=genotypes, top=means, width=0.9)
+        data = {'genotypes': genotypes,
+                'means': means,
+                'color': viridis(len(genotypes))}
+        source = ColumnDataSource(data=data)
+        sorted_genotypes = sorted(genotypes, key=lambda x: means[genotypes.index(x)])
+        plot = figure(x_range=sorted_genotypes, plot_height=400, title="Average duration of visits per genotype",
+                      tools="pan, wheel_zoom, box_zoom, reset, save",
+                      tooltips=[("Genotype", "@genotypes"), ("Average visit (sec)", "@means")], toolbar_sticky=False)
+        plot.vbar(x="genotypes", top="means", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
         return plot
 
     def _plot_visit_duration_per_pollinator(self):
+        """ Returns a plot with the average visit duration for each pollinator """
         dataframes = list(self.genotypes_dfs.values())
         whole_dataframe = pd.concat(dataframes)
         pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
@@ -341,35 +394,29 @@ class Plot:
         for pollinator in pollinators:
             series_for_mean = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]
             means.append(series_for_mean["Visit Duration"].mean())
-        plot = figure(x_range=pollinators, plot_height=250, title="Average duration of visits per pollinator",
-                      toolbar_location=None, tools="")
-        plot.vbar(x=pollinators, top=means, width=0.9)
+        data = {'pollinators': pollinators,
+                'means': means,
+                'color': viridis(len(pollinators))}
+        source = ColumnDataSource(data=data)
+        plot = figure(x_range=pollinators, plot_height=400, title="Average duration of visits per pollinator",
+                      tools="pan, wheel_zoom, box_zoom, reset, save",
+                      tooltips=[("Pollinator", "@pollinators"), ("Average visit (sec)", "@means")],
+                      toolbar_sticky=False)
+        plot.vbar(x="pollinators", top="means", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
-        return plot
-
-    def _plot_visit_cumsum_per_pollinator_delete(self):  # TODO delete
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
-        cumsum = []
-        for pollinator in pollinators:
-            series_for_sum = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]
-            cumsum.append(series_for_sum["Visit Duration"].sum())
-        plot = figure(x_range=pollinators, plot_height=250, title="Total duration (sum) of visits per pollinator",
-                      toolbar_location=None, tools="")
-        plot.vbar(x=pollinators, top=cumsum, width=0.9)
-        plot.xgrid.grid_line_color = None
-        plot.y_range.start = 0
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
         return plot
 
     def _plot_visit_cumsum_per_pollinator(self):
+        """ Returns a plot with the sum of all visit durations for each pollinator """
         dataframes = list(self.genotypes_dfs.values())
         whole_dataframe = pd.concat(dataframes)
         pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
         genotypes = whole_dataframe['Genotype'].unique().tolist()
         data = {"pollinators": pollinators}
-        colors = list(d3['Category20b'][len(genotypes)])
+        colors = list(viridis(len(genotypes)))
         for genotype in genotypes:
             list_of_data = []
             for pollinator in pollinators:
@@ -377,7 +424,9 @@ class Plot:
                 series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
                 list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
             data[genotype] = list_of_data
-        plot = figure(x_range=pollinators, plot_height=250, title="Fruit counts by year", tools="hover", tooltips="@pollinators on $name: @$name sec")
+        plot = figure(x_range=pollinators, plot_height=400, title="Total duration (sum) of all visits per pollinator",
+                      tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="@pollinators on $name: @$name sec",
+                      toolbar_sticky=False)
         plot.vbar_stack(genotypes, x='pollinators', width=0.9, color=colors, source=data,
                         legend_label=genotypes)
         plot.y_range.start = 0
@@ -385,18 +434,19 @@ class Plot:
         plot.xgrid.grid_line_color = None
         plot.axis.minor_tick_line_color = None
         plot.outline_line_color = None
-        plot.legend.location = "top_left"
-        plot.legend.orientation = "horizontal"
+        plot.legend.location = "top_right"
+        plot.legend.background_fill_alpha = 0.8
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
         return plot
 
     def _average_visits_heat_map(self):
-
+        """ WIP """
         dataframes = list(self.genotypes_dfs.values())
         whole_dataframe = pd.concat(dataframes)
         pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
         genotypes = whole_dataframe['Genotype'].unique().tolist()
         data = {"pollinators": pollinators}
-        colors = list(d3['Category20b'][len(genotypes)])
         for genotype in genotypes:
             list_of_data = []
             for pollinator in pollinators:
@@ -420,11 +470,11 @@ class Plot:
         mapper = LinearColorMapper(palette=colors, low=df.rate.min(), high=df.rate.max())
 
         plot = figure(plot_width=800, plot_height=300, title="US unemployment 1948—2016",
-                   x_range=list(data.index), y_range=list(reversed(data.columns)),
-                   toolbar_location=None, tools="", x_axis_location="above")
+                      x_range=list(data.index), y_range=list(reversed(data.columns)),
+                      tools="", x_axis_location="above")
 
         plot.rect(x="Year", y="Month", width=1, height=1, source=source,
-               line_color=None, fill_color=transform('rate', mapper))
+                  line_color=None, fill_color=transform('rate', mapper))
 
         color_bar = ColorBar(color_mapper=mapper,
                              ticker=BasicTicker(desired_num_ticks=len(colors)),
@@ -437,6 +487,7 @@ class Plot:
         plot.axis.major_label_text_font_size = "7px"
         plot.axis.major_label_standoff = 0
         plot.xaxis.major_label_orientation = 1.0
+        plot.toolbar.logo = None
         return plot
 
     def _average_visit_duration(self) -> int:
