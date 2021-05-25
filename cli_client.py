@@ -33,11 +33,11 @@ pipeline_1 = Pipeline(csv_file_path)
 pipeline_1.preprocessing_of_data()
 
 # Input genotypes
-pipeline_1.input_genotypes_data([{1: "Genotype A", 3: "Genotype A", 4: "Genotype A", 6: "Genotype B", 9: "Genotype B",
-                                  10: "Genotype B", 12: "Genotype B", 13: "Genotype C", 14: "Genotype C",
-                                  15: "Genotype C", 16: "Genotype C"},
-                                 {2: "Genotype A", 5: "Genotype A", 6: "Genotype A", 9: "Genotype B", 14: "Genotype B",
-                                  15: "Genotype C", 16: "Genotype C"}])
+pipeline_1.input_genotypes_data([{1: "Genotype A", 3: "Genotype A", 4: "Genotype B", 6: "Genotype C", 9: "Genotype C",
+                                  10: "Genotype D", 12: "Genotype D", 13: "Genotype E", 14: "Genotype E",
+                                  15: "Genotype F", 16: "Genotype F"},
+                                 {2: "Genotype A", 5: "Genotype A", 6: "Genotype B", 9: "Genotype A", 14: "Genotype A",
+                                  15: "Genotype D", 16: "Genotype F"}])
 
 pipeline_1.add_genotypes_and_join_df()
 
@@ -57,3 +57,4 @@ print(pipeline_1.genotypes_dfs["Genotype A"])
 
 plots_1 = Plot(pipeline_1.genotypes_dfs)
 plots_1.lay_out_plots_to_html()
+plots_1.compute_statistics()

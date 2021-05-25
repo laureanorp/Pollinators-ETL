@@ -32,29 +32,11 @@
         <h1>Results</h1>
         <p class="lead">This page shows the different results of the pipeline, including graphs for the number of visits, average duration, and other important stats.</p>
     </div>
+    <hr class="mb-5"/>
 
-    <h5 class="text-center">Pipeline finished successfully</h5>
-    <hr/>
-
+    <h5 class="text-center">There are no files uploaded. To obtain any results, please return to the home screen and upload some files.</h5>
     <div class="d-flex justify-content-center">
-        <p class="fw-bold mb-3">Average duration for all visits: {{ stats["average_visit_duration"] }}</p>
-    </div>
-
-    <div class="row">
-        {% include 'layout.html' %}
-    </div>
-
-    <div class="d-flex justify-content-center">
-        <a class="btn btn-lg btn-outline-success m-3" href="http://localhost:5000/input-genotypes" role="button">Download
-            excel</a>
-        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
-            dataset X</a>
-        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
-            dataset X</a>
-    </div>
-    <div class="d-flex justify-content-center">
-        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes"
-           role="button">Back</a>
+        <a class="btn btn-lg btn-success m-3" href="http://localhost:5000/home" role="button">Home</a>
     </div>
 
     <footer class="footer">
