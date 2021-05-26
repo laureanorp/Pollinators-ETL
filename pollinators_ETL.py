@@ -50,11 +50,13 @@ class Pipeline:
     def input_genotypes_data(self, genotypes_of_each_experiment):
         self.genotypes_of_each_experiment = genotypes_of_each_experiment
 
-    def input_parameters_of_run(self, filter_start_datetime: str, filter_end_datetime: str,
-                                max_time_between_signals: int, round_or_truncate: str,
-                                filter_tags_by_visited_genotypes: str, visited_genotypes_required: List[str],
-                                pollinators_to_remove: List[str], flowers_per_antenna: int):
+    def input_parameters_of_run(self, max_time_between_signals: int, round_or_truncate: str,
+                                pollinators_to_remove: List[str], flowers_per_antenna: int,
+                                filter_tags_by_visited_genotypes: str, visited_genotypes_required=None,
+                                filter_start_datetime: str = "", filter_end_datetime: str = ""):
         """ Method for introducing all the necessary parameters for the pipeline run """
+        if visited_genotypes_required is None:
+            visited_genotypes_required = []
         self.max_time_between_signals = max_time_between_signals
         self.filter_start_datetime = filter_start_datetime
         self.filter_end_datetime = filter_end_datetime
@@ -93,7 +95,7 @@ class Pipeline:
             for genotype_key in self.genotypes_dfs:
                 self.genotypes_dfs[genotype_key].to_excel(writer, sheet_name=genotype_key, index=False)
 
-    def plot_avg_visit_duration(self):
+    def plot_avg_visit_duration(self):  # TODO remove on production
         """
         Calculates the mean of no null visit durations for each genotype.
         Then plots that average duration for each genotype using a bar plot.
@@ -101,7 +103,7 @@ class Pipeline:
         list_of_means = []
         for genotype_key, genotype_df in self.genotypes_dfs.items():
             no_null = genotype_df[genotype_df["Visit Duration"] != 0]
-            list_of_means.append(no_null["Visit Duration"].mean())
+            list_of_means.append(round(no_null["Visit Duration"].mean(), 2))
         plt.figure()
         plt.bar(self.genotypes_dfs.keys(), list_of_means)
         plt.title("Average visit duration for each genotype")
@@ -350,15 +352,12 @@ class Plot:
         plot = figure(x_range=genotypes, plot_height=400, title="Total duration (sum) of all visits per genotype",
                       tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="$name: @$name sec",
                       toolbar_sticky=False)
-        plot.vbar_stack(pollinators, x='genotypes', width=0.9, color=colors, source=data,
-                        legend_label=pollinators)
+        plot.vbar_stack(pollinators, x='genotypes', width=0.9, color=colors, source=data)
         plot.y_range.start = 0
         plot.x_range.range_padding = 0.1
         plot.xgrid.grid_line_color = None
         plot.axis.minor_tick_line_color = None
         plot.outline_line_color = None
-        plot.legend.location = "top_right"
-        plot.legend.background_fill_alpha = 0.8
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
         return plot
@@ -369,7 +368,7 @@ class Plot:
         means = []
         for key in self.genotypes_dfs:
             genotypes.append(key)
-            means.append(self.genotypes_dfs[key]["Visit Duration"].mean())
+            means.append(round(self.genotypes_dfs[key]["Visit Duration"].mean(), 2))
         data = {'genotypes': genotypes,
                 'means': means,
                 'color': viridis(len(genotypes))}
@@ -393,7 +392,7 @@ class Plot:
         means = []
         for pollinator in pollinators:
             series_for_mean = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]
-            means.append(series_for_mean["Visit Duration"].mean())
+            means.append(round(series_for_mean["Visit Duration"].mean(), 2))
         data = {'pollinators': pollinators,
                 'means': means,
                 'color': viridis(len(pollinators))}

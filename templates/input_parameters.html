@@ -36,71 +36,85 @@
 
     <form action="http://localhost:5000/view-results" method="post" class="needs-validation" novalidate>
         <hr/>
-        <label for="start_date_filter" class="form-label">Start date and time for filtering the dataset.</label>
-        <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon3">Start date</span>
-            <input type="datetime-local" id="start_date_filter" name="start_date_filter" value="2021-01-01T00:00"
-                   min="2010-01-01T00:00" max="2050-01-01T00:00">
+
+        <label class="form-label">Do you wish to filter the data using a date interval?</label>
+        <div class="input-group mb-4 has-validation">
+            <select class="form-select" aria-label="Default select example" id="filter_data_by_date"
+                    name="filter_data_by_date"
+                    required>
+                <option selected value="False">No, include all the data</option>
+                <option value="True">Yes, let me choose the time interval</option>
+            </select>
         </div>
 
-        <label for="end_date_filter" class="form-label">End date and time for filtering the dataset.</label>
-        <div class="input-group mb-3">
+        <div class="input-group mb-4">
+            <span class="input-group-text" id="basic-addon3">Start date</span>
+            <input type="datetime-local" id="start_date_filter" name="start_date_filter" value=""
+                   min="2010-01-01T00:00" max="2050-01-01T00:00" aria-label="start date filter" readonly>
             <span class="input-group-text" id="basic-addon3">End date</span>
-            <input type="datetime-local" id="end_date_filter" name="end_date_filter" value="2021-01-01T00:00"
-                   min="2010-01-01T00:00" max="2050-01-01T00:00">
+            <input type="datetime-local" id="end_date_filter" name="end_date_filter" value=""
+                   min="2010-01-01T00:00" max="2050-01-01T00:00" aria-label="end date filter" readonly>
         </div>
 
         <label for="max_time_between_signals" class="form-label">Choose the maximum time in seconds that is considered
-            to be the same
-            visit between a signal and the
-            next.</label>
-        <div class="input-group mb-3 has-validation">
+            to be the same visit between a signal and the next. The bigger the number, less visits with longer durations
+            will appear. </label>
+        <div class="input-group mb-4 has-validation">
             <span class="input-group-text" id="basic-addon3">Max time between signals</span>
-            <input type="text" class="form-control" id="max_time_between_signals" placeholder="Number <1"
+            <input type="text" class="form-control" id="max_time_between_signals" placeholder="Number greater than 1"
                    aria-describedby="basic-addon3" name="max_time_between_signals" required>
             <div class="invalid-feedback">
-                Please write a valid number
+                Please write a valid number (greater than 1)
             </div>
         </div>
 
-        <label class="form-label">Choose to round or truncate milliseconds of the timestamps</label>
-        <div class="input-group mb-3 has-validation">
+        <label class="form-label">Choose to round or truncate milliseconds of the timestamps of the signals.</label>
+        <div class="input-group mb-4 has-validation">
             <select class="form-select" aria-label="Default select example" name="round_or_truncate" required>
                 <option selected value="round">Round milliseconds</option>
                 <option value="truncate">Truncate milliseconds</option>
             </select>
         </div>
 
-        <label class="form-label">Filter tags by genotypes visited?</label>
-        <div class="input-group mb-3 has-validation">
-            <select class="form-select" aria-label="Default select example" name="filter_tags_by_visited_genotypes"
+        <label class="form-label">Do you wish to filter the pollinators depending of the genotypes they have
+            visited?</label>
+        <div class="input-group mb-4 has-validation">
+            <select class="form-select" aria-label="Default select example" id="filter_tags_by_visited_genotypes"
+                    name="filter_tags_by_visited_genotypes"
                     required>
                 <option selected value="False">No, include all pollinators of the data</option>
                 <option value="True">Yes</option>
             </select>
         </div>
 
-        <label for="visited_genotypes_required" class="form-label">Visited genotypes required</label>
-        <div class="input-group mb-3">
+        <label for="visited_genotypes_required" class="form-label">If you choose to filter by visited genotypes,
+            introduce the list of the genotypes required separated by commas. Please, use the same names as in the
+            previous screen.</label>
+        <div class="input-group mb-4">
             <span class="input-group-text" id="basic-addon3">Visited genotypes required</span>
-            <input type="text" class="form-control" id="visited_genotypes_required" placeholder="Python list (WIP)"
-                   aria-describedby="basic-addon3" name="visited_genotypes_required">
+            <input type="text" class="form-control" id="visited_genotypes_required"
+                   placeholder="Genotype A, Genotype B, etc"
+                   aria-describedby="basic-addon3" name="visited_genotypes_required" readonly>
         </div>
 
-        <label for="pollinators_to_remove" class="form-label">Pollinators to remove</label>
-        <div class="input-group mb-3">
+        <label for="pollinators_to_remove" class="form-label">If you want to remove certain pollinators from the data,
+            introduce their IDs here.</label>
+        <div class="input-group mb-4">
             <span class="input-group-text" id="basic-addon3">Pollinators to remove</span>
-            <input type="text" class="form-control" id="pollinators_to_remove" placeholder="Python list (WIP)"
+            <input type="text" class="form-control" id="pollinators_to_remove"
+                   placeholder="985.113005100764, 982.091063520932, etc"
                    aria-describedby="basic-addon3" name="pollinators_to_remove">
         </div>
 
-        <label for="flowers_per_antenna" class="form-label">Flowers per antenna.</label>
-        <div class="input-group mb-3 has-validation">
+        <label for="flowers_per_antenna" class="form-label">In case each antenna has more than one flowers per antenna,
+            introduce the number of flowers here, so its used as a normalization factor on the results.</label>
+        <div class="input-group mb-4 has-validation">
             <span class="input-group-text" id="basic-addon3">Flowers per antenna</span>
-            <input type="text" class="form-control" id="flowers_per_antenna" placeholder="Number <=1"
+            <input type="text" class="form-control" id="flowers_per_antenna"
+                   placeholder="Number equal or greater than 1"
                    aria-describedby="basic-addon3" name="flowers_per_antenna" required>
             <div class="invalid-feedback">
-                Please write a valid number
+                Please write a valid number (1 or greater)
             </div>
         </div>
 
@@ -114,6 +128,32 @@
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
     </footer>
 
+    <script>
+        document.getElementById('filter_data_by_date').onchange = function () {
+            if (document.getElementById('filter_data_by_date').value === "False") {
+                document.getElementById('start_date_filter').readOnly = true;
+                document.getElementById('end_date_filter').readOnly = true;
+                document.getElementById('start_date_filter').value = "";
+                document.getElementById('end_date_filter').value = "";
+            } else {
+                document.getElementById('start_date_filter').readOnly = false;
+                document.getElementById('end_date_filter').readOnly = false;
+            }
+        }
+    </script>
+    <script>
+        document.getElementById('filter_tags_by_visited_genotypes').onchange = function () {
+            document.getElementById('visited_genotypes_required').readonly = document.getElementById('filter_tags_by_visited_genotypes').value === "False";
+        };
+        document.getElementById('filter_tags_by_visited_genotypes').onchange = function () {
+            if (document.getElementById('filter_tags_by_visited_genotypes').value === "False") {
+                document.getElementById('visited_genotypes_required').readOnly = true;
+                document.getElementById('visited_genotypes_required').value = "";
+            } else {
+                document.getElementById('visited_genotypes_required').readOnly = false;
+            }
+        }
+    </script>
     <script>
         // Example starter JavaScript for disabling form submissions if there are invalid fields
         (function () {

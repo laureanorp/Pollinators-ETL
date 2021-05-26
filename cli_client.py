@@ -42,9 +42,9 @@ pipeline_1.input_genotypes_data([{1: "Genotype A", 3: "Genotype A", 4: "Genotype
 pipeline_1.add_genotypes_and_join_df()
 
 # Input parameters
-pipeline_1.input_parameters_of_run(filter_start_datetime, filter_end_datetime, max_time_between_signals,
-                                   round_or_truncate, filter_tags_by_visited_genotypes, visited_genotypes_required,
-                                   pollinators_to_remove, flowers_per_antenna)
+pipeline_1.input_parameters_of_run(max_time_between_signals, round_or_truncate, pollinators_to_remove,
+                                   flowers_per_antenna, filter_tags_by_visited_genotypes, visited_genotypes_required,
+                                   filter_start_datetime, filter_end_datetime)
 
 # Run the main process of the pipeline
 pipeline_1.run_pipeline()

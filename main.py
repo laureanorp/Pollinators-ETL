@@ -65,17 +65,17 @@ def upload_files():
         return render_template('error_input_genotypes.html')
 
 
-@app.route('/input_parameters', methods=['POST', 'GET'])
+@app.route('/input-parameters', methods=['POST', 'GET'])
 def send_genotypes():
     """ Posts the data for the genotypes and returns the template for input parameters """
     if request.method == 'POST':
         genotypes = genotypes_form_to_list(request.form)
-        pipeline.input_genotypes_data(
-            [{1: "Genotype A", 3: "Genotype A", 4: "Genotype B", 6: "Genotype C", 9: "Genotype C",
-              10: "Genotype D", 12: "Genotype D", 13: "Genotype E", 14: "Genotype E",
-              15: "Genotype F", 16: "Genotype F"},
-             {2: "Genotype A", 5: "Genotype A", 6: "Genotype B", 9: "Genotype A", 14: "Genotype A",
-              15: "Genotype D", 16: "Genotype F"}])  # TODO parameters
+        genotypes_debugging = [{1: "Genotype A", 3: "Genotype A", 4: "Genotype B", 6: "Genotype C", 9: "Genotype C",
+                                10: "Genotype D", 12: "Genotype D", 13: "Genotype E", 14: "Genotype E",
+                                15: "Genotype F", 16: "Genotype F"},
+                               {2: "Genotype A", 5: "Genotype A", 6: "Genotype B", 9: "Genotype A", 14: "Genotype A",
+                                15: "Genotype D", 16: "Genotype F"}]
+        pipeline.input_genotypes_data(genotypes)
         pipeline.add_genotypes_and_join_df()
         return render_template('input_parameters.html')
     elif request.method == 'GET' and pipeline is not None:
@@ -90,11 +90,13 @@ def send_parameters_and_run():
     global plots
     if request.method == 'POST':
         # Introduce the parameters of the pipeline
-        parameters = [request.form["start_date_filter"], request.form["end_date_filter"],
-                      request.form["max_time_between_signals"], request.form["round_or_truncate"],
-                      request.form["filter_tags_by_visited_genotypes"], request.form["visited_genotypes_required"],
-                      request.form["pollinators_to_remove"], request.form["flowers_per_antenna"]]
-        pipeline.input_parameters_of_run("", "", 7, "round", "True", [], [], 1)  # TODO parameters
+        parameters = [request.form["max_time_between_signals"], request.form["round_or_truncate"],
+                      request.form["pollinators_to_remove"].split(', '), request.form["flowers_per_antenna"],
+                      request.form["filter_tags_by_visited_genotypes"],
+                      request.form["visited_genotypes_required"].split(', '),
+                      request.form["start_date_filter"], request.form["end_date_filter"]]
+        parameters_debugging = [7, "round", [], 1, "False", [], "", ""]
+        pipeline.input_parameters_of_run(*parameters)
         # Run the main process of the pipeline
         pipeline.run_pipeline()
         plots = Plot(pipeline.genotypes_dfs)
