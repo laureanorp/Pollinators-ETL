@@ -85,10 +85,11 @@ class Pipeline:
         # Apply all the necessary functions to the genotypes data frames
         self.genotypes_dfs = self._process_all_genotypes_dfs()
         self._simplify_dataframes()
+        self._export_dataframes_to_excel()
 
-    def export_dataframes_to_excel(self):
+    def _export_dataframes_to_excel(self):
         """ Exports the current genotypes_dfs to an excel file with a sheet for each dataframe """
-        with pd.ExcelWriter('exports/Antennas_dfs.xlsx') as writer:
+        with pd.ExcelWriter('exports/genotypes_dfs.xlsx') as writer:
             for genotype_key in self.genotypes_dfs:
                 self.genotypes_dfs[genotype_key].to_excel(writer, sheet_name=genotype_key, index=False)
 
@@ -293,6 +294,7 @@ class Plot:
         dataframes = list(self.genotypes_dfs.values())
         self.whole_dataframe = pd.concat(dataframes)
         self.stats = None
+        self.dfs_html = None
 
     def lay_out_plots_to_html(self):
         """ Saves all the plots generated in this Class to one HTML file with a certain layout"""
@@ -309,11 +311,19 @@ class Plot:
     def compute_descriptive_statistics(self):
         """ Returns a list of descriptive stats about the data frames """
         self.stats = {"genotypes_count": len(self.genotypes_dfs),
-                 "pollinators_count": len(self.whole_dataframe['DEC Tag ID'].unique()),
-                 "visits_mean": round(self.whole_dataframe["Visit Duration"].mean(), 2),
-                 "visits_median": self.whole_dataframe["Visit Duration"].median(),
-                 "visits_mode": self.whole_dataframe["Visit Duration"].mode().values.tolist(),
-                 "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2)}
+                      "pollinators_count": len(self.whole_dataframe['DEC Tag ID'].unique()),
+                      "visits_mean": round(self.whole_dataframe["Visit Duration"].mean(), 2),
+                      "visits_median": self.whole_dataframe["Visit Duration"].median(),
+                      "visits_mode": self.whole_dataframe["Visit Duration"].mode().values.tolist(),
+                      "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2)}
+
+    def dataframes_to_html_tables(self):
+        self.dfs_html = []
+        for key in self.genotypes_dfs:
+            html = self.genotypes_dfs[key].to_html(index=False)
+            self.dfs_html.append(key + "_df.html")
+            with open("exports/" + key + "_df.html", "w+") as file_handler:
+                file_handler.write(html)
 
     def _plot_visits_per_genotype(self):
         """ Returns a plot with the total number visits for each genotype """

@@ -30,9 +30,11 @@
 
     <div class="jumbotron">
         <h1>Results</h1>
-        <p class="lead">Experiment(s) used on this process: <strong>{{ file_names|join(', ') }}</strong>. After applying all the filters
+        <p class="lead">Experiment(s) used on this process: <strong>{{ file_names|join(', ') }}</strong>. After applying
+            all the filters
             and tasks, this data includes a total
-            of <strong>{{ stats["pollinators_count"] }} pollinators</strong>, with <strong>{{ stats["genotypes_count"] }} genotypes</strong> to visit. Graphical
+            of <strong>{{ stats["pollinators_count"] }} pollinators</strong>, with
+            <strong>{{ stats["genotypes_count"] }} genotypes</strong> to visit. Graphical
             results, key information and tables can be found on the following sections.</p>
     </div>
 
@@ -71,17 +73,21 @@
     <hr class="mt-0"/>
 
     <div class="d-flex justify-content-center">
-        <a class="btn btn-lg btn-outline-success m-3" href="http://localhost:5000/input-genotypes" role="button">Download
+        <a class="btn btn-outline-success" href="../exports/genotypes_dfs.xlsx" role="button">Download
             excel</a>
-        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
-            dataset X</a>
-        <a class="btn btn-lg btn-outline-secondary m-3" href="http://localhost:5000/input-genotypes" role="button">View
-            dataset X</a>
     </div>
+
+    {% for html_table in html_tables %}
+        <a class="btn btn-outline-secondary" href="../exports/{{ html_table }}" role="button" target="_blank">View
+            dataset {{ html_table }}</a>
+    {% endfor %}
 
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/home" role="button">Back</a>
     </div>
+
+    <a class="btn btn-outline-secondary" href="../exports/Antena1_df.html" role="button" target="_blank">View
+        dataset test</a>
 
     <footer class="footer">
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>

@@ -103,13 +103,16 @@ def send_parameters_and_run():
         plots = Plot(pipeline.genotypes_dfs)
         plots.lay_out_plots_to_html()
         plots.compute_descriptive_statistics()
+        plots.dataframes_to_html_tables()
         stats = plots.stats
         file_names = pipeline.csv_files
-        return render_template('pipeline_results.html', stats=stats, file_names=file_names)
+        html_tables = plots.dfs_html
+        return render_template('pipeline_results.html', stats=stats, file_names=file_names, html_tables=html_tables)
     elif request.method == 'GET' and plots is not None:
         stats = plots.stats
         file_names = pipeline.csv_files
-        return render_template('pipeline_results.html', stats=stats, file_names=file_names)
+        html_tables = plots.dfs_html
+        return render_template('pipeline_results.html', stats=stats, file_names=file_names, html_tables=html_tables)
     else:
         return render_template('error_pipeline_results.html')
 

@@ -52,8 +52,8 @@ pipeline_1.run_pipeline()
 # Some outputs for testing
 print(pipeline_1.genotypes_dfs["Genotype A"])
 # Export antennas_dfs to an excel file
-# pipeline_1.export_dataframes_to_excel()
 # pipeline_1.plot_avg_visit_duration()
 
 plots_1 = Plot(pipeline_1.genotypes_dfs)
 plots_1.lay_out_plots_to_html()
+plots_1.dataframes_to_html_tables()
