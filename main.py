@@ -10,6 +10,7 @@ UPLOAD_FOLDER = "server_uploads"
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 pipeline: Optional[Pipeline] = None
 plots: Optional[Plot] = None
 

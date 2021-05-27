@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from bokeh.embed import file_html
-from bokeh.io import output_file
 from bokeh.layouts import layout
 from bokeh.models import (BasicTicker, ColorBar, ColumnDataSource,
                           LinearColorMapper, PrintfTickFormatter, )
@@ -297,7 +296,6 @@ class Plot:
 
     def lay_out_plots_to_html(self):
         """ Saves all the plots generated in this Class to one HTML file with a certain layout"""
-        output_file("templates/layout.html")
         html = file_html(layout([
             [self._plot_visits_per_genotype()],
             [self._plot_visits_cumsum_per_genotype()],
