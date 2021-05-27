@@ -8,6 +8,9 @@ hr {
   border-top: 1px solid #909497
 }
 
+.dashboard-table th, .dashboard-table td {
+  padding: 0;
+}
 /* Everything but the jumbotron gets side spacing for mobile first views */
 .header,
 .marketing,
