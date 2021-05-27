@@ -36,8 +36,14 @@
     <h5 class="text-center">Pipeline finished successfully</h5>
     <hr/>
 
-    <div class="d-flex justify-content-center">
-        <p class="fw-bold mb-3">Average duration for all visits: {{ stats["average_visit_duration"] }}</p>
+    <div class="row text-center">
+        <p class="fw-bold mb-3">Experiments used: {{ file_names|join(', ') }}</p>
+        <p class="fw-bold mb-3">Number of pollinators: {{ stats["pollinators_count"] }}</p>
+        <p class="fw-bold mb-3">Number of genotypes: {{ stats["genotypes_count"] }}</p>
+        <p class="fw-bold mb-3">Visits mean: {{ stats["visits_mean"] }}</p>
+        <p class="fw-bold mb-3">Visits median: {{ stats["visits_median"] }}</p>
+        <p class="fw-bold mb-3">Visits mode(s): {{ stats["visits_mode"]|join(', ') }}</p>
+        <p class="fw-bold mb-3">Visits std: {{ stats["visits_std"] }}</p>
     </div>
 
     <div class="row">

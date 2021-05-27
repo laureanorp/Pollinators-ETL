@@ -5,13 +5,11 @@ import numpy as np
 import pandas as pd
 from bokeh.embed import file_html
 from bokeh.layouts import layout
-from bokeh.models import (BasicTicker, ColorBar, ColumnDataSource,
-                          LinearColorMapper, PrintfTickFormatter, )
+from bokeh.models import (ColumnDataSource,
+                          )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
-from bokeh.sampledata.unemployment1948 import data as data_heat_map
-from bokeh.transform import transform
 from math import pi
 
 
@@ -292,6 +290,8 @@ class Plot:
     def __init__(self, genotypes_dfs: Dict[str, pd.DataFrame]):
         # Input for creating the initial dataframe
         self.genotypes_dfs = genotypes_dfs
+        dataframes = list(self.genotypes_dfs.values())
+        self.whole_dataframe = pd.concat(dataframes)
         self.stats = None
 
     def lay_out_plots_to_html(self):
@@ -306,9 +306,14 @@ class Plot:
         with open("templates/layout.html", "w+") as file_handler:
             file_handler.write(html)
 
-    def compute_statistics(self):
-        """ Assigns different stats to a dictionary that is later returned to the client """
-        self.stats = {"average_visit_duration": self._average_visit_duration()}
+    def compute_descriptive_statistics(self):
+        """ Returns a list of descriptive stats about the data frames """
+        self.stats = {"genotypes_count": len(self.genotypes_dfs),
+                 "pollinators_count": len(self.whole_dataframe['DEC Tag ID'].unique()),
+                 "visits_mean": round(self.whole_dataframe["Visit Duration"].mean(), 2),
+                 "visits_median": self.whole_dataframe["Visit Duration"].median(),
+                 "visits_mode": self.whole_dataframe["Visit Duration"].mode().values.tolist(),
+                 "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2)}
 
     def _plot_visits_per_genotype(self):
         """ Returns a plot with the total number visits for each genotype """
@@ -334,16 +339,15 @@ class Plot:
 
     def _plot_visits_cumsum_per_genotype(self):
         """ Returns a plot with the total duration of all visits for each genotype """
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
-        genotypes = whole_dataframe['Genotype'].unique().tolist()
+        pollinators = self.whole_dataframe['DEC Tag ID'].unique().tolist()
+        genotypes = self.whole_dataframe['Genotype'].unique().tolist()
         data = {"genotypes": genotypes}
         colors = list(viridis(len(pollinators)))
         for pollinator in pollinators:
             list_of_data = []
             for genotype in genotypes:
-                series_for_sum = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
+                series_for_sum = self.whole_dataframe[
+                    self.whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
                 series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
                 list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
             data[pollinator] = list_of_data
@@ -384,12 +388,10 @@ class Plot:
 
     def _plot_visit_duration_per_pollinator(self):
         """ Returns a plot with the average visit duration for each pollinator """
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
+        pollinators = self.whole_dataframe['DEC Tag ID'].unique().tolist()
         means = []
         for pollinator in pollinators:
-            series_for_mean = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]
+            series_for_mean = self.whole_dataframe[self.whole_dataframe['DEC Tag ID'] == pollinator]
             means.append(round(series_for_mean["Visit Duration"].mean(), 2))
         data = {'pollinators': pollinators,
                 'means': means,
@@ -408,16 +410,15 @@ class Plot:
 
     def _plot_visit_cumsum_per_pollinator(self):
         """ Returns a plot with the sum of all visit durations for each pollinator """
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
-        genotypes = whole_dataframe['Genotype'].unique().tolist()
+        pollinators = self.whole_dataframe['DEC Tag ID'].unique().tolist()
+        genotypes = self.whole_dataframe['Genotype'].unique().tolist()
         data = {"pollinators": pollinators}
         colors = list(viridis(len(genotypes)))
         for genotype in genotypes:
             list_of_data = []
             for pollinator in pollinators:
-                series_for_sum = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
+                series_for_sum = self.whole_dataframe[
+                    self.whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
                 series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
                 list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
             data[genotype] = list_of_data
@@ -436,60 +437,3 @@ class Plot:
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
         return plot
-
-    def _average_visits_heat_map(self):
-        """ WIP """
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        pollinators = whole_dataframe['DEC Tag ID'].unique().tolist()
-        genotypes = whole_dataframe['Genotype'].unique().tolist()
-        data = {"pollinators": pollinators}
-        for genotype in genotypes:
-            list_of_data = []
-            for pollinator in pollinators:
-                series_for_sum = whole_dataframe[whole_dataframe['DEC Tag ID'] == pollinator]  # filter by pollinator
-                series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
-                list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
-            data[genotype] = list_of_data
-
-        data_heat_map.Year = data_heat_map.Year.astype(str)
-        data = data_heat_map.set_index('Year')
-        data.drop('Annual', axis=1, inplace=True)
-        data.columns.name = 'Month'
-
-        # reshape to 1D array or rates with a month and year for each row.
-        df = pd.DataFrame(data.stack(), columns=['rate']).reset_index()
-
-        source = ColumnDataSource(df)
-
-        # this is the colormap from the original NYTimes plot
-        colors = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
-        mapper = LinearColorMapper(palette=colors, low=df.rate.min(), high=df.rate.max())
-
-        plot = figure(plot_width=800, plot_height=300, title="US unemployment 1948—2016",
-                      x_range=list(data.index), y_range=list(reversed(data.columns)),
-                      tools="", x_axis_location="above")
-
-        plot.rect(x="Year", y="Month", width=1, height=1, source=source,
-                  line_color=None, fill_color=transform('rate', mapper))
-
-        color_bar = ColorBar(color_mapper=mapper,
-                             ticker=BasicTicker(desired_num_ticks=len(colors)),
-                             formatter=PrintfTickFormatter(format="%d%%"))
-
-        plot.add_layout(color_bar, 'right')
-
-        plot.axis.axis_line_color = None
-        plot.axis.major_tick_line_color = None
-        plot.axis.major_label_text_font_size = "7px"
-        plot.axis.major_label_standoff = 0
-        plot.xaxis.major_label_orientation = 1.0
-        plot.toolbar.logo = None
-        return plot
-
-    def _average_visit_duration(self) -> int:
-        # Not per genotype, avg of whole dataset
-        dataframes = list(self.genotypes_dfs.values())
-        whole_dataframe = pd.concat(dataframes)
-        mean = round(whole_dataframe["Visit Duration"].mean(), 2)
-        return mean

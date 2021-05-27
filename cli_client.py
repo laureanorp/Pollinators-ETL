@@ -57,4 +57,3 @@ print(pipeline_1.genotypes_dfs["Genotype A"])
 
 plots_1 = Plot(pipeline_1.genotypes_dfs)
 plots_1.lay_out_plots_to_html()
-plots_1.compute_statistics()
