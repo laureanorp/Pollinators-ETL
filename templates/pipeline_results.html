@@ -77,16 +77,16 @@
             excel</a>
     </div>
 
-    {% for html_table in html_tables %}
-        <a class="btn btn-outline-secondary" href="../exports/{{ html_table }}" role="button" target="_blank">View
-            dataset {{ html_table }}</a>
+    {% for table_name in tables_names %}
+        <a class="btn btn-outline-secondary" href="../exports/{{ table_name }}_df.html" role="button" target="_blank">View
+            dataset {{ table_name }}</a>
     {% endfor %}
 
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/home" role="button">Back</a>
     </div>
 
-    <a class="btn btn-outline-secondary" href="../exports/Antena1_df.html" role="button" target="_blank">View
+    <a class="btn btn-outline-secondary" href="../exports/test4_df.html" role="button" target="_blank">View
         dataset test</a>
 
     <footer class="footer">

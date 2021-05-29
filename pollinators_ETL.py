@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List, Dict
 
 import matplotlib.pyplot as plt
@@ -5,7 +6,7 @@ import numpy as np
 import pandas as pd
 from bokeh.embed import file_html
 from bokeh.layouts import layout
-from bokeh.models import (ColumnDataSource,
+from bokeh.models import (ColumnDataSource, HoverTool,
                           )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure
@@ -72,6 +73,7 @@ class Pipeline:
         """ Main function of the class, runs all the pipeline steps and returns a dict of dataframes """
         pd.options.mode.chained_assignment = None  # Temporary fix for SettingCopyWarning
 
+        self._clean_up_cache_folders()
         self.df = self.df_with_genotypes.copy()
         self._remove_pollinators_manually(self.pollinators_to_remove)
         self._remove_unused_columns()
@@ -272,6 +274,7 @@ class Pipeline:
         """
         # TODO solve problem: scan time should be the first or the last signal?
         for genotype_key in self.genotypes_dfs:
+            self.genotypes_dfs[genotype_key].dropna(inplace=True)
             self.genotypes_dfs[genotype_key].drop(columns='Time Delta', inplace=True)
             self.genotypes_dfs[genotype_key] = self.genotypes_dfs[genotype_key][
                 self.genotypes_dfs[genotype_key]['Visit Duration'] != 0]
@@ -280,6 +283,9 @@ class Pipeline:
         """ Given a list of pollinators, removes them completely from the main dataset """
         if pollinators_to_remove:
             self.df = self.df[~self.df['DEC Tag ID'].isin(pollinators_to_remove)]
+
+    def _clean_up_cache_folders(self):
+        pass
 
 
 class Plot:
@@ -294,7 +300,7 @@ class Plot:
         dataframes = list(self.genotypes_dfs.values())
         self.whole_dataframe = pd.concat(dataframes)
         self.stats = None
-        self.dfs_html = None
+        self.genotypes_names = None
 
     def lay_out_plots_to_html(self):
         """ Saves all the plots generated in this Class to one HTML file with a certain layout"""
@@ -304,6 +310,8 @@ class Plot:
             [self._plot_visit_duration_per_genotype()],
             [self._plot_visit_duration_per_pollinator()],
             [self._plot_visit_cumsum_per_pollinator()],
+            [self._plot_visit_evolution_per_hour()],
+            [self._plot_visit_evolution_per_day()],
         ]), CDN)
         with open("templates/layout.html", "w+") as file_handler:
             file_handler.write(html)
@@ -318,10 +326,10 @@ class Plot:
                       "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2)}
 
     def dataframes_to_html_tables(self):
-        self.dfs_html = []
+        self.genotypes_names = []
         for key in self.genotypes_dfs:
             html = self.genotypes_dfs[key].to_html(index=False)
-            self.dfs_html.append(key + "_df.html")
+            self.genotypes_names.append(key)
             with open("exports/" + key + "_df.html", "w+") as file_handler:
                 file_handler.write(html)
 
@@ -345,6 +353,8 @@ class Plot:
         plot.y_range.start = 0
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Genotype"
+        plot.yaxis.axis_label = "Number of visits"
         return plot
 
     def _plot_visits_cumsum_per_genotype(self):
@@ -372,6 +382,8 @@ class Plot:
         plot.outline_line_color = None
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Genotype"
+        plot.yaxis.axis_label = "Total time of visits"
         return plot
 
     def _plot_visit_duration_per_genotype(self):
@@ -394,6 +406,8 @@ class Plot:
         plot.y_range.start = 0
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Genotype"
+        plot.yaxis.axis_label = "Average visit duration"
         return plot
 
     def _plot_visit_duration_per_pollinator(self):
@@ -416,6 +430,8 @@ class Plot:
         plot.y_range.start = 0
         plot.xaxis.major_label_orientation = pi / 4
         plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Pollinator"
+        plot.yaxis.axis_label = "Average visit duration"
         return plot
 
     def _plot_visit_cumsum_per_pollinator(self):
@@ -445,5 +461,58 @@ class Plot:
         plot.legend.location = "top_right"
         plot.legend.background_fill_alpha = 0.8
         plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Pollinator"
+        plot.yaxis.axis_label = "Total time visiting"
+        return plot
+
+    def _plot_visit_evolution_per_hour(self):
+        """ Returns a plot with the evolution of number of visits per hour """
+        sorted_df = self.whole_dataframe.sort_values(by=['Scan Date and Time'])
+        datetime_df = sorted_df.resample('H', on='Scan Date and Time').count()
+        datetime_df["visits_count"] = datetime_df["Visit Duration"]
+        datetime_df.drop(columns=['Antenna ID', 'DEC Tag ID', 'Genotype', 'Scan Date and Time', "Visit Duration"],
+                         inplace=True)
+        x = datetime_df.index
+        y = datetime_df["visits_count"]
+        data = {'dates': x,
+                'visits_count': y}
+        source = ColumnDataSource(data=data)
+        custom_tooltips = HoverTool(
+            tooltips=[('Date', '@dates{%d/%m/%Y}'), ('Time', '@dates{%H:00 - %H:59}'), ('Visits this hour', '@visits_count')],
+            formatters={'@dates': 'datetime'},
+            mode='vline',
+        )
+        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by hour", tools=[custom_tooltips, "pan, wheel_zoom, box_zoom, reset, save"], toolbar_sticky=False)
+        plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
+        plot.xaxis.axis_label = "Date & time"
+        plot.yaxis.axis_label = "Number of visits"
+        plot.toolbar.logo = None
+        return plot
+
+    def _plot_visit_evolution_per_day(self):
+        """ Returns a plot with the evolution of number of visits per day """
+        sorted_df = self.whole_dataframe.sort_values(by=['Scan Date and Time'])
+        datetime_df = sorted_df.resample('D', on='Scan Date and Time').count()
+        datetime_df["visits_count"] = datetime_df["Visit Duration"]
+        datetime_df.drop(columns=['Antenna ID', 'DEC Tag ID', 'Genotype', 'Scan Date and Time', "Visit Duration"],
+                         inplace=True)
+        x = datetime_df.index
+        y = datetime_df["visits_count"]
+        data = {'dates': x,
+                'visits_count': y}
+        source = ColumnDataSource(data=data)
+        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by day", tools="pan, wheel_zoom, box_zoom, reset, save", toolbar_sticky=False)
+        plot.vbar(x='dates', top='visits_count', color="#168756", line_alpha=0.25, fill_alpha=0.25, width=timedelta(days=0.5), source=source)
+        lines = plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
+        custom_tooltips = HoverTool(
+            tooltips=[('Date', '@dates{%d/%m/%Y}'), ('Visits this day', '@visits_count')],
+            formatters={'@dates': 'datetime'},
+            mode='vline',
+            renderers=[lines]
+        )
+        plot.add_tools(custom_tooltips)
+        plot.xaxis.axis_label = "Date & time"
+        plot.yaxis.axis_label = "Number of visits"
         plot.toolbar.logo = None
         return plot
