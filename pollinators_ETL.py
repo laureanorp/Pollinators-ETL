@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from typing import List, Dict
 
@@ -6,7 +7,7 @@ import numpy as np
 import pandas as pd
 from bokeh.embed import file_html
 from bokeh.layouts import layout
-from bokeh.models import (ColumnDataSource, HoverTool,
+from bokeh.models import (ColumnDataSource, HoverTool, DatetimeTickFormatter,
                           )
 from bokeh.palettes import viridis
 from bokeh.plotting import figure
@@ -73,7 +74,7 @@ class Pipeline:
         """ Main function of the class, runs all the pipeline steps and returns a dict of dataframes """
         pd.options.mode.chained_assignment = None  # Temporary fix for SettingCopyWarning
 
-        self._clean_up_cache_folders()
+        self._clean_up_exports_folder()
         self.df = self.df_with_genotypes.copy()
         self._remove_pollinators_manually(self.pollinators_to_remove)
         self._remove_unused_columns()
@@ -284,8 +285,11 @@ class Pipeline:
         if pollinators_to_remove:
             self.df = self.df[~self.df['DEC Tag ID'].isin(pollinators_to_remove)]
 
-    def _clean_up_cache_folders(self):
-        pass
+    @staticmethod
+    def _clean_up_exports_folder():
+        directory = 'exports'
+        for entry in os.listdir(directory):
+            os.remove(os.path.join(directory, entry))
 
 
 class Plot:
@@ -314,7 +318,9 @@ class Plot:
             [self._plot_visit_evolution_per_day()],
         ]), CDN)
         with open("templates/layout.html", "w+") as file_handler:
+            file_handler.write("{% raw %}")  # avoid Jinja2 having problems with bokeh date formatters as "{%H"
             file_handler.write(html)
+            file_handler.write("{% endraw %}")
 
     def compute_descriptive_statistics(self):
         """ Returns a list of descriptive stats about the data frames """
@@ -479,14 +485,17 @@ class Plot:
                 'visits_count': y}
         source = ColumnDataSource(data=data)
         custom_tooltips = HoverTool(
-            tooltips=[('Date', '@dates{%d/%m/%Y}'), ('Time', '@dates{%H:00 - %H:59}'), ('Visits this hour', '@visits_count')],
+            tooltips=[('Date', '@dates{%d/%m/%Y}'), ('Time', '@dates{%H:00 - %H:59}'),
+                      ('Visits this hour', '@visits_count')],
             formatters={'@dates': 'datetime'},
             mode='vline',
         )
-        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by hour", tools=[custom_tooltips, "pan, wheel_zoom, box_zoom, reset, save"], toolbar_sticky=False)
+        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by hour",
+                      tools=[custom_tooltips, "pan, wheel_zoom, box_zoom, reset, save"], toolbar_sticky=False)
         plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
         plot.xaxis.axis_label = "Date & time"
         plot.yaxis.axis_label = "Number of visits"
+        plot.xaxis.formatter = DatetimeTickFormatter(days="%e/%m")
         plot.toolbar.logo = None
         return plot
 
@@ -502,8 +511,10 @@ class Plot:
         data = {'dates': x,
                 'visits_count': y}
         source = ColumnDataSource(data=data)
-        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by day", tools="pan, wheel_zoom, box_zoom, reset, save", toolbar_sticky=False)
-        plot.vbar(x='dates', top='visits_count', color="#168756", line_alpha=0.25, fill_alpha=0.25, width=timedelta(days=0.5), source=source)
+        plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by day",
+                      tools="pan, wheel_zoom, box_zoom, reset, save", toolbar_sticky=False)
+        plot.vbar(x='dates', top='visits_count', color="#168756", line_alpha=0.25, fill_alpha=0.25,
+                  width=timedelta(days=0.5), source=source)
         lines = plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
         custom_tooltips = HoverTool(
             tooltips=[('Date', '@dates{%d/%m/%Y}'), ('Visits this day', '@visits_count')],
@@ -514,5 +525,6 @@ class Plot:
         plot.add_tools(custom_tooltips)
         plot.xaxis.axis_label = "Date & time"
         plot.yaxis.axis_label = "Number of visits"
+        plot.xaxis.formatter = DatetimeTickFormatter(days="%e/%m")
         plot.toolbar.logo = None
         return plot
