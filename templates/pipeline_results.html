@@ -62,6 +62,7 @@
         </table>
     </div>
 
+
     <h5 class="mt-5">Interactive charts</h5>
     <hr class="mt-0"/>
 
@@ -69,7 +70,35 @@
         {% include 'layout.html' %}
     </div>
 
-    <h5 class="mt-5">Table visualization</h5>
+    <h5 class="mt-5">T-test for visit duration average</h5>
+    <hr class="mt-0"/>
+
+    <p>The following table shows the results of a t-test using the average duration of the visits, comparing different
+        pairs of genotypes. The t-statistic and the p-value are produced with SciPy's "scipy.stats.ttest_ind" function,
+        and will help to describe if there is a significant difference between the means.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Genotypes compared</th>
+                <th scope="col">T-statistic</th>
+                <th scope="col">p value</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for key in stats["ttest_genotypes"].keys() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ stats["ttest_genotypes"][key][0] }}</td>
+                    <td>{{ stats["ttest_genotypes"][key][1] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h5 class="mt-5">Tables visualization</h5>
     <hr class="mt-0"/>
 
     <div class="d-flex justify-content-center">
@@ -85,9 +114,6 @@
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/input-parameters" role="button">Back</a>
     </div>
-
-    <a class="btn btn-outline-secondary" href="../exports/test4_df.html" role="button" target="_blank">View
-        dataset test</a>
 
     <footer class="footer">
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>

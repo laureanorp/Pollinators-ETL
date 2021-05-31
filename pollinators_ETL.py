@@ -1,3 +1,4 @@
+import itertools
 import os
 from datetime import timedelta
 from typing import List, Dict
@@ -13,6 +14,7 @@ from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from math import pi
+from scipy.stats import ttest_ind
 
 
 class Pipeline:
@@ -329,15 +331,32 @@ class Plot:
                       "visits_mean": round(self.whole_dataframe["Visit Duration"].mean(), 2),
                       "visits_median": self.whole_dataframe["Visit Duration"].median(),
                       "visits_mode": self.whole_dataframe["Visit Duration"].mode().values.tolist(),
-                      "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2)}
+                      "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2),
+                      "ttest_genotypes": self._test_difference_means()}
 
     def dataframes_to_html_tables(self):
+        """ Exports each dataframe to a simple HTML table """
         self.genotypes_names = []
         for key in self.genotypes_dfs:
             html = self.genotypes_dfs[key].to_html(index=False)
             self.genotypes_names.append(key)
             with open("exports/" + key + "_df.html", "w+") as file_handler:
                 file_handler.write(html)
+
+    def _detect_outliers(self):
+        """ """
+        pass
+
+    def _test_difference_means(self) -> Dict[str, List[float]]:
+        """
+        Computes a t-test (difference between means) between each possible pair of genotypes,
+        using the average visit duration of the df.
+         """
+        ttest_results = {}
+        for key, key2 in itertools.combinations(self.genotypes_dfs.keys(), 2):  # genotype is compared with the rest
+            ttest_results[key + " and " + key2] = [round(num, 3) for num in list(  # round t-test results
+                ttest_ind(self.genotypes_dfs[key]["Visit Duration"], self.genotypes_dfs[key2]["Visit Duration"]))]
+        return ttest_results
 
     def _plot_visits_per_genotype(self):
         """ Returns a plot with the total number visits for each genotype """
