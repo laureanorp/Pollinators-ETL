@@ -332,7 +332,8 @@ class Plot:
                       "visits_median": self.whole_dataframe["Visit Duration"].median(),
                       "visits_mode": self.whole_dataframe["Visit Duration"].mode().values.tolist(),
                       "visits_std": round(self.whole_dataframe["Visit Duration"].std(), 2),
-                      "ttest_genotypes": self._test_difference_means()}
+                      "ttest_genotypes": self._test_difference_means(),
+                      "outliers": self._detect_outliers()}
 
     def dataframes_to_html_tables(self):
         """ Exports each dataframe to a simple HTML table """
@@ -344,8 +345,20 @@ class Plot:
                 file_handler.write(html)
 
     def _detect_outliers(self):
-        """ """
-        pass
+        """
+        Detects outliers in the whole dat by using the IQR method.
+        Computes the Q1 and Q3 and extracts those visits out of that range.
+        Then fetches the pollinators accountable for those visits and returns them as a dict.
+        """
+        q1 = self.whole_dataframe['Visit Duration'].quantile(0.25)
+        q3 = self.whole_dataframe['Visit Duration'].quantile(0.75)
+        iqr = q3 - q1
+        outliers_series = (self.whole_dataframe['Visit Duration'] < (q1 - 1.5 * iqr)) | (
+                    self.whole_dataframe['Visit Duration'] > (q3 + 1.5 * iqr))
+
+        pollinators_series = self.whole_dataframe.loc[outliers_series.values]["DEC Tag ID"]
+        outlier_pollinators = pollinators_series.value_counts().to_dict()
+        return outlier_pollinators
 
     def _test_difference_means(self) -> Dict[str, List[float]]:
         """

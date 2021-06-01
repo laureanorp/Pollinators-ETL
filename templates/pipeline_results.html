@@ -98,6 +98,32 @@
         </table>
     </div>
 
+    <h5 class="mt-5">Possible outliers</h5>
+    <hr class="mt-0"/>
+
+    <p>This table includes possible outliers in the data, detected by using the IQR method on each visit duration. Once
+        the outlying visits have been isolated, the pollinator accountable for those visits is fetched. The number of
+        times a pollinator has caused an outlying visit is described on the second column.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Pollinator</th>
+                <th scope="col">Number of outlying visits</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for key in stats["outliers"].keys() %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ stats["outliers"][key] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <h5 class="mt-5">Tables visualization</h5>
     <hr class="mt-0"/>
 
@@ -105,7 +131,7 @@
         <a class="btn btn-outline-success" href="../exports/genotypes_dfs.xlsx" role="button">Download
             excel</a>
     </div>
-
+<!--
     {% for table_name in tables_names %}
         <a class="btn btn-outline-secondary" href="../exports/{{ table_name }}_df.html" role="button" target="_blank">View
             dataset {{ table_name }}</a>
@@ -114,6 +140,7 @@
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/input-parameters" role="button">Back</a>
     </div>
+    -->
 
     <footer class="footer">
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
