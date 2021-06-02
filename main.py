@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 
-from pollinators_ETL import Pipeline, Plot
+from rfid_pollinators_pipeline import Pipeline, Plot
 
 UPLOAD_FOLDER = "server_uploads"
 
