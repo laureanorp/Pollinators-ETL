@@ -24,7 +24,7 @@
 <div class="container">
     <nav class="navbar navbar-light">
         <h3 class="text-muted">RFID Pollinators</h3>
-        <a class="inline btn btn-outline-secondary" href="http://localhost:5000/home" role="button">Home</a>
+        <a class="inline btn btn-outline-secondary" href="home" role="button">Home</a>
     </nav>
     <hr class="mb-5"/>
 
@@ -37,32 +37,12 @@
 
     <h5 class="text-center">There are no files uploaded. Please return to the home screen and upload some files.</h5>
     <div class="d-flex justify-content-center">
-        <a class="btn btn-lg btn-success m-3" href="http://localhost:5000/home" role="button">Home</a>
+        <a class="btn btn-lg btn-success m-3" href="home" role="button">Home</a>
     </div>
 
     <footer class="footer">
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
     </footer>
-
-    <script>
-        // Example starter JavaScript for disabling form submissions if there are invalid fields
-        (function () {
-            'use strict'
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
-            var forms = document.querySelectorAll('.needs-validation')
-            // Loop over them and prevent submission
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
-    </script>
 </div> <!-- /container -->
 </body>
 </html>

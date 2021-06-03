@@ -31,11 +31,11 @@
         <h1>RFID Pollinators</h1>
         <p class="lead">This pipeline produces useful charts and statistics based on experiments using Biomark hardware
             and RFID antennas. Signal information is analyzed, processed and categorized based on the user's input
-            parameters. Start by choosing one or more CSV files.</p>
-        <form action="http://localhost:5000/input-genotypes" method="post" enctype="multipart/form-data"
+            parameters. Start by choosing one or more Excel files.</p>
+        <form action="input-genotypes" method="post" enctype="multipart/form-data"
               class="needs-validation" novalidate>
             <div class="center has-validation">
-                <input type="file" accept=".csv" class="form-control" name="csv_files" multiple required>
+                <input type="file" accept=".xlsx,.xls,.odf,.ods,.odt" class="form-control" name="excel_files" multiple required>
                 <div class="invalid-feedback">
                     Please choose one or more .CSV files to upload
                 </div>

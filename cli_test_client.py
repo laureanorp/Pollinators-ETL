@@ -1,10 +1,10 @@
 from rfid_pollinators_pipeline import Pipeline, Plot
 
 # Input variables that will be frontend UI elements (textbox, checkboxes, etc)
-csv_files = ["12-13.05CSV.csv", "14-17.05.21CSV.csv"]
+excel_files = ["12-13.05.21.xlsx", "14-17.05.21.xlsx"]
 
 # Instance the Pipeline class
-pipeline = Pipeline(csv_files)
+pipeline = Pipeline(excel_files)
 pipeline.preprocessing_of_data()
 
 # Send Genotypes

@@ -20,9 +20,9 @@ from scipy.stats import ttest_ind
 class Pipeline:
     """ Class that includes all the functions of the ETL pipeline """
 
-    def __init__(self, csv_files: List[str]):
+    def __init__(self, excel_files: List[str]):
         # Input involved in creating the initial dataframe
-        self.csv_files = csv_files
+        self.excel_files = excel_files
         self.parsed_dataframes = None
         self.antennas_info = None
         self.dates_of_dfs = None
@@ -48,8 +48,8 @@ class Pipeline:
         self.genotypes_names = None
 
     def preprocessing_of_data(self):
-        """Calls the csv parser function and exports the antennas of each dataframe"""
-        self.parsed_dataframes = self._csv_files_to_dataframe()
+        """Calls the excel parser function and exports the antennas of each dataframe"""
+        self.parsed_dataframes = self._excel_files_to_dataframe()
         self.antennas_info = self._export_antennas_info()
         self.dates_of_dfs = self._export_dates_info()
 
@@ -98,24 +98,24 @@ class Pipeline:
         self._dataframes_to_html_tables()
         self._update_pollinator_aliases()
 
-    def _csv_files_to_dataframe(self) -> Dict[str, pd.DataFrame]:
-        """ Given a list of csv files, creates a dict with the parsed dataframes """
+    def _excel_files_to_dataframe(self) -> Dict[str, pd.DataFrame]:
+        """ Given a list of excel files, creates a dict with the parsed dataframes """
         parsed_dataframes = {}
-        for csv_file in self.csv_files:
-            file_name = str(csv_file)
-            csv_path = "".join(["server_uploads/", csv_file])
-            parsed_dataframes[file_name] = pd.read_csv(csv_path, sep=";",
-                                                       dtype={"Scan Date": "object", "Scan Time": "object",
-                                                              "Antenna ID": "int64", "DEC Tag ID": "object"},
-                                                       low_memory=False)
+        for excel_file in self.excel_files:
+            file_name = str(excel_file)
+            excel_path = "".join(["server_uploads/", excel_file])
+            parsed_dataframes[file_name] = pd.read_excel(excel_path,
+                                                         usecols=["Scan Date", "Scan Time", "Antenna ID", "DEC Tag ID"],
+                                                         dtype={"Scan Date": "object", "Scan Time": "object",
+                                                                "Antenna ID": "int64", "DEC Tag ID": "object"})
         return parsed_dataframes
 
     def _clean_up_cached_files(self):
         """Removes old files that are not going to be used on this pipeline run"""
         for entry in os.listdir('exports'):  # removes old html/excel files
             os.remove(os.path.join('exports', entry))
-        for entry in os.listdir('server_uploads'):  # removes input csv files
-            if entry not in self.csv_files:
+        for entry in os.listdir('server_uploads'):  # removes input excel files
+            if entry not in self.excel_files:
                 os.remove(os.path.join('server_uploads', entry))
 
     def _export_antennas_info(self) -> Dict[str, List[str]]:
@@ -382,7 +382,7 @@ class Plot:
         visits = []
         for name in self.genotypes_dfs:
             genotypes.append(name)
-            visits.append(self.genotypes_dfs[name].size)
+            visits.append(len(self.genotypes_dfs[name]))
         data = {'genotypes': genotypes,
                 'visits': visits,
                 'color': viridis(len(genotypes))}  # TODO palette limited to 256 colors. Need to cycle
@@ -415,7 +415,7 @@ class Plot:
                 list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that set
             data[pollinator] = list_of_data
         plot = figure(x_range=genotypes, plot_height=400, title="Total duration (sum) of all visits per genotype",
-                      tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="$name: @$name sec",
+                      tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="Pollinator $name: @$name sec",
                       toolbar_sticky=False)
         plot.vbar_stack(pollinators, x='genotypes', width=0.9, color=colors, source=data)
         plot.y_range.start = 0

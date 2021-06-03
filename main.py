@@ -19,10 +19,10 @@ def genotypes_form_to_list(form_dict: Dict[str, str]) -> List[Dict[int, str]]:
     """ Transforms the dict coming from the input_genotypes HTML form into a list of dicts """
     nested_genotypes = {}
     for key in form_dict:  # form_dict = request.form
-        split_key = key.split(".csv ")  # ["file1", "1"]
+        split_key = key.split(".xlsx ")  # ["file1", "1"]
         nested_genotypes[split_key[0]] = {}  # 1st loop creates the necessary dictionaries
     for key in form_dict:
-        split_key = key.split(".csv ")
+        split_key = key.split(".xlsx ")
         nested_genotypes[split_key[0]][int(split_key[1])] = form_dict[key]  # 2nd loop assigns the values to each dict
     genotypes_of_each_experiment = []
     for key in nested_genotypes:
@@ -45,8 +45,8 @@ def upload_files():
     file_names = []
     global pipeline
     if request.method == 'POST':
-        csv_files = request.files.getlist('csv_files')
-        for file in csv_files:
+        excel_files = request.files.getlist('excel_files')
+        for file in excel_files:
             secure_file_name = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_file_name))
             file_names.append(secure_file_name)
@@ -57,7 +57,7 @@ def upload_files():
                                dates=pipeline.dates_of_dfs,
                                antennas_info=pipeline.antennas_info)
     elif request.method == 'GET' and pipeline is not None:
-        file_names = pipeline.csv_files
+        file_names = pipeline.excel_files
         antennas_info = pipeline.antennas_info
         dates = pipeline.dates_of_dfs
         return render_template('input_genotypes.html', file_names=file_names, dates=dates,
@@ -97,17 +97,22 @@ def send_parameters_and_run():
         plots.lay_out_plots_to_html()
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
-                               file_names=pipeline.csv_files,
+                               file_names=pipeline.excel_files,
                                pollinators_alias=pipeline.pollinators_aliases,
-                               html_tables=pipeline.genotypes_names)
+                               tables_names=pipeline.genotypes_names)
     elif request.method == 'GET' and plots is not None:
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
-                               file_names=pipeline.csv_files,
+                               file_names=pipeline.excel_files,
                                pollinators_alias=pipeline.pollinators_aliases,
-                               html_tables=pipeline.genotypes_names)
+                               tables_names=pipeline.genotypes_names)
     else:
         return render_template('error_pipeline_results.html')
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html")
 
 
 if __name__ == '__main__':
