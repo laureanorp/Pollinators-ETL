@@ -98,11 +98,13 @@ def send_parameters_and_run():
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
                                file_names=pipeline.csv_files,
+                               pollinators_alias=pipeline.pollinators_aliases,
                                html_tables=pipeline.genotypes_names)
     elif request.method == 'GET' and plots is not None:
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
                                file_names=pipeline.csv_files,
+                               pollinators_alias=pipeline.pollinators_aliases,
                                html_tables=pipeline.genotypes_names)
     else:
         return render_template('error_pipeline_results.html')

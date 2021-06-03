@@ -1,7 +1,7 @@
 from rfid_pollinators_pipeline import Pipeline, Plot
 
 # Input variables that will be frontend UI elements (textbox, checkboxes, etc)
-csv_files =  ["12-13.05CSV.csv", "14-17.05.21CSV.csv"]
+csv_files = ["12-13.05CSV.csv", "14-17.05.21CSV.csv"]
 
 # Instance the Pipeline class
 pipeline = Pipeline(csv_files)

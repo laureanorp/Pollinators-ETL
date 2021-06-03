@@ -13,11 +13,13 @@ from bokeh.palettes import viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from math import pi
+from numpy.lib import math
 from scipy.stats import ttest_ind
 
 
 class Pipeline:
     """ Class that includes all the functions of the ETL pipeline """
+
     def __init__(self, csv_files: List[str]):
         # Input involved in creating the initial dataframe
         self.csv_files = csv_files
@@ -35,6 +37,7 @@ class Pipeline:
         self.filter_start_datetime = None
         self.filter_end_datetime = None
         # Pipeline attributes
+        self.pollinators_aliases = None
         self.df_with_genotypes = None
         self.genotypes_dfs = None
         self.df = None
@@ -71,11 +74,12 @@ class Pipeline:
         self.flowers_per_antenna = int(flowers_per_antenna)
 
     def run_pipeline(self):
-        """Main function of the class, runs all the pipeline steps and returns a dict of dataframes"""
+        """Main function of the class, runs all the pipeline steps"""
         pd.options.mode.chained_assignment = None  # Temporary fix for SettingCopyWarning
 
         self._clean_up_cached_files()
         self._add_genotypes_and_join_df()
+        self._assign_aliases_for_pollinators()
         self.df = self.df_with_genotypes.copy()
         self._remove_pollinators_manually(self.pollinators_to_remove)
         self._remove_unused_columns()
@@ -97,12 +101,12 @@ class Pipeline:
         """ Given a list of csv files, creates a dict with the parsed dataframes """
         parsed_dataframes = {}
         for csv_file in self.csv_files:
-            key_name = str(csv_file)
+            file_name = str(csv_file)
             csv_path = "".join(["server_uploads/", csv_file])
-            parsed_dataframes[key_name] = pd.read_csv(csv_path, sep=";",
-                                                      dtype={"Scan Date": "object", "Scan Time": "object",
-                                                             "Antenna ID": "int64", "DEC Tag ID": "object"},
-                                                      low_memory=False)
+            parsed_dataframes[file_name] = pd.read_csv(csv_path, sep=";",
+                                                       dtype={"Scan Date": "object", "Scan Time": "object",
+                                                              "Antenna ID": "int64", "DEC Tag ID": "object"},
+                                                       low_memory=False)
         return parsed_dataframes
 
     def _clean_up_cached_files(self):
@@ -116,16 +120,16 @@ class Pipeline:
     def _export_antennas_info(self) -> Dict[str, List[str]]:
         """ Exports a dict with lists of the antennas present in each dataframe """
         antennas_of_each_dataframe = {}
-        for key in self.parsed_dataframes:
-            antennas = sorted(self.parsed_dataframes[key]['Antenna ID'].unique().tolist())
-            antennas_of_each_dataframe[key] = antennas
+        for file_name in self.parsed_dataframes:
+            antennas = sorted(self.parsed_dataframes[file_name]['Antenna ID'].unique().tolist())
+            antennas_of_each_dataframe[file_name] = antennas
         return antennas_of_each_dataframe
 
     def _export_dates_info(self) -> Dict[str, List[str]]:
         dates_of_dfs = {}
-        for key in self.parsed_dataframes:
-            dates_of_dfs[key] = [self.parsed_dataframes[key]['Scan Date'].iloc[0],
-                                 self.parsed_dataframes[key]['Scan Date'].iloc[-1]]
+        for file_name in self.parsed_dataframes:
+            dates_of_dfs[file_name] = [self.parsed_dataframes[file_name]['Scan Date'].iloc[0],
+                                       self.parsed_dataframes[file_name]['Scan Date'].iloc[-1]]
         return dates_of_dfs
 
     def _add_genotypes_column(self, dict_of_dfs: Dict[str, pd.DataFrame]):
@@ -138,8 +142,8 @@ class Pipeline:
         new_dict_of_dfs = {}
         for count, (df, genotypes) in enumerate(zip(dataframes, self.genotypes_of_each_experiment)):
             df["Genotype"] = df["Antenna ID"].map(genotypes)
-            key_name = "df_" + str(count)
-            new_dict_of_dfs[key_name] = df
+            name = "df_" + str(count)
+            new_dict_of_dfs[name] = df
         return new_dict_of_dfs
 
     def _add_genotypes_and_join_df(self):
@@ -147,14 +151,25 @@ class Pipeline:
         dataframes = list(self._add_genotypes_column(self.parsed_dataframes).values())
         self.df_with_genotypes = pd.concat(dataframes)
 
+    def _assign_aliases_for_pollinators(self):
+        """
+        Creates a dictionary for easier identification of the pollinators.
+        Each pollinator (key) has its own integer.
+        """
+        self.pollinators_aliases = {}
+        pollinators = self.df_with_genotypes['DEC Tag ID'].unique().tolist()
+        for count, pollinator in enumerate(pollinators, start=1):
+            self.pollinators_aliases[pollinator] = str(count)
+        self.df_with_genotypes["Tag Alias"] = self.df_with_genotypes["DEC Tag ID"].map(self.pollinators_aliases)
+
     def _remove_pollinators_manually(self, pollinators_to_remove: List[str]):
-        """ Given a list of pollinators, removes them completely from the main dataset """
+        """ Given a list of pollinators (aliases), removes them completely from the main dataset """
         if pollinators_to_remove:
             self.df = self.df[~self.df['DEC Tag ID'].isin(pollinators_to_remove)]
 
     def _remove_unused_columns(self):
         """Removes unused columns in the dataframe"""
-        self.df = self.df[['Scan Date', 'Scan Time', 'DEC Tag ID', 'Antenna ID', 'Genotype']]
+        self.df = self.df[['Scan Date', 'Scan Time', 'DEC Tag ID', 'Tag Alias', 'Antenna ID', 'Genotype']]
 
     def _create_dict_of_genotypes_dfs(self) -> Dict[str, pd.DataFrame]:
         """
@@ -166,8 +181,8 @@ class Pipeline:
         genotypes_data_frames = {}
         for genotype in genotypes:
             genotype_data_frame = self.df['Genotype'] == genotype
-            key_name = str(genotype)
-            genotypes_data_frames[key_name] = self.df[genotype_data_frame]
+            genotype_name = str(genotype)
+            genotypes_data_frames[genotype_name] = self.df[genotype_data_frame]
         return genotypes_data_frames
 
     def _obtain_good_visitors(self, all_tag_ids: List[str], genotypes_required: List[str]) -> set:
@@ -261,6 +276,7 @@ class Pipeline:
         self.final_joined_df = pd.concat(dataframes)
         self.statistics = {"genotypes_count": len(self.genotypes_dfs),
                            "pollinators_count": len(self.final_joined_df['DEC Tag ID'].unique()),
+                           "visits_count": len(self.final_joined_df),
                            "visits_mean": round(self.final_joined_df["Visit Duration"].mean(), 2),
                            "visits_median": self.final_joined_df["Visit Duration"].median(),
                            "visits_mode": self.final_joined_df["Visit Duration"].mode().values.tolist(),
@@ -277,13 +293,13 @@ class Pipeline:
     def _dataframes_to_html_tables(self):
         """ Exports each dataframe to a simple HTML table """
         self.genotypes_names = []
-        for key in self.genotypes_dfs:
-            html = self.genotypes_dfs[key].to_html(index=False)
-            self.genotypes_names.append(key)
-            with open("exports/" + key + "_df.html", "w+") as file_handler:
+        for name in self.genotypes_dfs:
+            html = self.genotypes_dfs[name].to_html(index=False)
+            self.genotypes_names.append(name)
+            with open("exports/" + name + "_df.html", "w+") as file_handler:
                 file_handler.write(html)
 
-    def _detect_outliers(self):
+    def _detect_outliers(self) -> Dict[str, int]:
         """
         Detects outliers in the whole dat by using the IQR method.
         Computes the Q1 and Q3 and extracts those visits out of that range.
@@ -295,7 +311,7 @@ class Pipeline:
         outliers_series = (self.final_joined_df['Visit Duration'] < (q1 - 1.5 * iqr)) | (
                 self.final_joined_df['Visit Duration'] > (q3 + 1.5 * iqr))
 
-        pollinators_series = self.final_joined_df.loc[outliers_series.values]["DEC Tag ID"]
+        pollinators_series = self.final_joined_df.loc[outliers_series.values]["Tag Alias"]
         outlier_pollinators = pollinators_series.value_counts().to_dict()
         return outlier_pollinators
 
@@ -303,11 +319,14 @@ class Pipeline:
         """
         Computes a t-test (difference between means) between each possible pair of genotypes,
         using the average visit duration of the df.
-         """
+        """
         ttest_results = {}
-        for key, key2 in itertools.combinations(self.genotypes_dfs.keys(), 2):  # genotype is compared with the rest
-            ttest_results[key + " and " + key2] = [round(num, 3) for num in list(  # round t-test results
-                ttest_ind(self.genotypes_dfs[key]["Visit Duration"], self.genotypes_dfs[key2]["Visit Duration"]))]
+        for genotype, genotype2 in itertools.combinations(self.genotypes_dfs.keys(), 2):
+            result = [round(num, 3) for num in list(  # round t-test results
+                ttest_ind(self.genotypes_dfs[genotype]["Visit Duration"],
+                          self.genotypes_dfs[genotype2]["Visit Duration"]))]  # genotype is compared with the rest
+            if not math.isnan(result[0]):  # save the result only if not NaN
+                ttest_results[genotype + " and " + genotype2] = result
         return ttest_results
 
     @staticmethod
@@ -328,6 +347,7 @@ class Plot:
     Class that includes methods for generating plots using the class Pipeline results.
     Is this collection of methods, Bokeh is used to generate HTML plots that are later included in the Flask app.
     """
+
     def __init__(self, genotypes_dfs: Dict[str, pd.DataFrame]):
         # Input for creating the initial dataframe
         self.genotypes_dfs = genotypes_dfs
@@ -354,9 +374,9 @@ class Plot:
         """ Returns a plot with the total number visits for each genotype """
         genotypes = []
         visits = []
-        for key in self.genotypes_dfs:
-            genotypes.append(key)
-            visits.append(self.genotypes_dfs[key].size)
+        for name in self.genotypes_dfs:
+            genotypes.append(name)
+            visits.append(self.genotypes_dfs[name].size)
         data = {'genotypes': genotypes,
                 'visits': visits,
                 'color': viridis(len(genotypes))}  # TODO palette limited to 256 colors. Need to cycle
@@ -376,7 +396,7 @@ class Plot:
 
     def _plot_visits_cumsum_per_genotype(self):
         """ Returns a plot with the total duration of all visits for each genotype """
-        pollinators = self.final_joined_df['DEC Tag ID'].unique().tolist()
+        pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         genotypes = self.final_joined_df['Genotype'].unique().tolist()
         data = {"genotypes": genotypes}
         colors = list(viridis(len(pollinators)))
@@ -384,9 +404,9 @@ class Plot:
             list_of_data = []
             for genotype in genotypes:
                 series_for_sum = self.final_joined_df[
-                    self.final_joined_df['DEC Tag ID'] == pollinator]  # filter by pollinator
+                    self.final_joined_df['Tag Alias'] == pollinator]  # filter by pollinator
                 series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
-                list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
+                list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that set
             data[pollinator] = list_of_data
         plot = figure(x_range=genotypes, plot_height=400, title="Total duration (sum) of all visits per genotype",
                       tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="$name: @$name sec",
@@ -407,9 +427,9 @@ class Plot:
         """ Returns a plot with the average visit duration for each genotype """
         genotypes = []
         means = []
-        for key in self.genotypes_dfs:
-            genotypes.append(key)
-            means.append(round(self.genotypes_dfs[key]["Visit Duration"].mean(), 2))
+        for name in self.genotypes_dfs:
+            genotypes.append(name)
+            means.append(round(self.genotypes_dfs[name]["Visit Duration"].mean(), 2))
         data = {'genotypes': genotypes,
                 'means': means,
                 'color': viridis(len(genotypes))}
@@ -429,10 +449,10 @@ class Plot:
 
     def _plot_visit_duration_per_pollinator(self):
         """ Returns a plot with the average visit duration for each pollinator """
-        pollinators = self.final_joined_df['DEC Tag ID'].unique().tolist()
+        pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         means = []
         for pollinator in pollinators:
-            series_for_mean = self.final_joined_df[self.final_joined_df['DEC Tag ID'] == pollinator]
+            series_for_mean = self.final_joined_df[self.final_joined_df['Tag Alias'] == pollinator]
             means.append(round(series_for_mean["Visit Duration"].mean(), 2))
         data = {'pollinators': pollinators,
                 'means': means,
@@ -453,7 +473,7 @@ class Plot:
 
     def _plot_visit_cumsum_per_pollinator(self):
         """ Returns a plot with the sum of all visit durations for each pollinator """
-        pollinators = self.final_joined_df['DEC Tag ID'].unique().tolist()
+        pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         genotypes = self.final_joined_df['Genotype'].unique().tolist()
         data = {"pollinators": pollinators}
         colors = list(viridis(len(genotypes)))
@@ -461,7 +481,7 @@ class Plot:
             list_of_data = []
             for pollinator in pollinators:
                 series_for_sum = self.final_joined_df[
-                    self.final_joined_df['DEC Tag ID'] == pollinator]  # filter by pollinator
+                    self.final_joined_df['Tag Alias'] == pollinator]  # filter by pollinator
                 series_for_sum = series_for_sum[series_for_sum["Genotype"] == genotype]  # filter by genotype
                 list_of_data.append(series_for_sum["Visit Duration"].sum())  # sum all the values of that  set
             data[genotype] = list_of_data
@@ -488,8 +508,7 @@ class Plot:
         sorted_df = self.final_joined_df.sort_values(by=['Scan Date and Time'])
         datetime_df = sorted_df.resample('H', on='Scan Date and Time').count()
         datetime_df["visits_count"] = datetime_df["Visit Duration"]
-        datetime_df.drop(columns=['Antenna ID', 'DEC Tag ID', 'Genotype', 'Scan Date and Time', "Visit Duration"],
-                         inplace=True)
+        datetime_df = datetime_df[['visits_count']]
         x = datetime_df.index
         y = datetime_df["visits_count"]
         data = {'dates': x,
@@ -515,8 +534,7 @@ class Plot:
         sorted_df = self.final_joined_df.sort_values(by=['Scan Date and Time'])
         datetime_df = sorted_df.resample('D', on='Scan Date and Time').count()
         datetime_df["visits_count"] = datetime_df["Visit Duration"]
-        datetime_df.drop(columns=['Antenna ID', 'DEC Tag ID', 'Genotype', 'Scan Date and Time', "Visit Duration"],
-                         inplace=True)
+        datetime_df = datetime_df[['visits_count']]
         x = datetime_df.index
         y = datetime_df["visits_count"]
         data = {'dates': x,

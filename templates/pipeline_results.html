@@ -45,7 +45,8 @@
         <table class="table table-borderless dashboard-table">
             <thead>
             <tr>
-                <th scope="col">Mean</th>
+                 <th scope="col">Count</th>
+                <th scope="col">Mean duration</th>
                 <th scope="col">Median</th>
                 <th scope="col">Mode(s)</th>
                 <th scope="col">St. deviation</th>
@@ -53,6 +54,7 @@
             </thead>
             <tbody>
             <tr>
+                <td class="h3">{{ stats["visits_count"] }}</td>
                 <td class="h3">{{ stats["visits_mean"] }} sec</td>
                 <td class="h3">{{ stats["visits_median"] }} sec</td>
                 <td class="h3">{{ stats["visits_mode"]|join(', ') }} sec</td>
@@ -124,6 +126,30 @@
         </table>
     </div>
 
+    <h5 class="mt-5">Pollinators legend</h5>
+    <hr class="mt-0"/>
+
+    <p>Each pollinator has been assigned an alias (number) to make the chart representations easier on the eyes. Here is a table with the number corresponding to each pollinator.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Alias (number)</th>
+                <th scope="col">Pollinator ID (DEC)</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for key in pollinators_alias.keys() %}
+                <tr>
+                    <td>{{ pollinators_alias[key] }}</td>
+                    <td>{{ key }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <h5 class="mt-5">Tables visualization</h5>
     <hr class="mt-0"/>
 
@@ -131,16 +157,16 @@
         <a class="btn btn-outline-success" href="../exports/genotypes_dfs.xlsx" role="button">Download
             excel</a>
     </div>
-<!--
+    <!--
     {% for table_name in tables_names %}
         <a class="btn btn-outline-secondary" href="../exports/{{ table_name }}_df.html" role="button" target="_blank">View
             dataset {{ table_name }}</a>
     {% endfor %}
+    -->
 
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/input-parameters" role="button">Back</a>
     </div>
-    -->
 
     <footer class="footer">
         <p>&copy; 2021 Laureano Ruiz · RFID Pollinators · Part of Name of the Project</p>
