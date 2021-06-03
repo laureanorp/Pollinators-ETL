@@ -96,6 +96,7 @@ class Pipeline:
         self._compute_descriptive_statistics()
         self._export_dataframes_to_excel()
         self._dataframes_to_html_tables()
+        self._update_pollinator_aliases()
 
     def _csv_files_to_dataframe(self) -> Dict[str, pd.DataFrame]:
         """ Given a list of csv files, creates a dict with the parsed dataframes """
@@ -286,7 +287,7 @@ class Pipeline:
 
     def _export_dataframes_to_excel(self):
         """ Exports the current genotypes_dfs to an excel file with a sheet for each dataframe """
-        with pd.ExcelWriter('exports/genotypes_dfs.xlsx') as writer:
+        with pd.ExcelWriter('exports/genotypes_tables.xlsx') as writer:
             for genotype_key in self.genotypes_dfs:
                 self.genotypes_dfs[genotype_key].to_excel(writer, sheet_name=genotype_key, index=False)
 
@@ -296,7 +297,7 @@ class Pipeline:
         for name in self.genotypes_dfs:
             html = self.genotypes_dfs[name].to_html(index=False)
             self.genotypes_names.append(name)
-            with open("exports/" + name + "_df.html", "w+") as file_handler:
+            with open("exports/" + name + "_table.html", "w+") as file_handler:
                 file_handler.write(html)
 
     def _detect_outliers(self) -> Dict[str, int]:
@@ -328,6 +329,11 @@ class Pipeline:
             if not math.isnan(result[0]):  # save the result only if not NaN
                 ttest_results[genotype + " and " + genotype2] = result
         return ttest_results
+
+    def _update_pollinator_aliases(self):
+        final_pollinators = self.final_joined_df["DEC Tag ID"].unique().tolist()
+        new_dict = {alias: self.pollinators_aliases[alias] for alias in final_pollinators}
+        self.pollinators_aliases = new_dict
 
     @staticmethod
     def _round_milliseconds(column: str, dataframe: pd.DataFrame) -> pd.DataFrame:

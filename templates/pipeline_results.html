@@ -153,18 +153,18 @@
     <h5 class="mt-5">Tables visualization</h5>
     <hr class="mt-0"/>
 
-    <div class="d-flex justify-content-center">
-        <a class="btn btn-outline-success" href="../exports/genotypes_dfs.xlsx" role="button">Download
-            excel</a>
-    </div>
-    <!--
-    {% for table_name in tables_names %}
-        <a class="btn btn-outline-secondary" href="../exports/{{ table_name }}_df.html" role="button" target="_blank">View
-            dataset {{ table_name }}</a>
-    {% endfor %}
-    -->
+    <p>This final section includes options to download and view the data tables used for the charts and statistics.</p>
 
-    <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4">
+    <div class="d-flex">
+        <a class="btn btn-outline-success" href="../exports/genotypes_tables.xlsx" role="button">Download
+            excel file</a>
+        {% for table_name in tables_names %}
+            <a class="btn btn-outline-secondary" href="../exports/{{ table_name }}_table.html" role="button" target="_blank">View
+                dataset {{ table_name }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4 mt-4">
         <a class="btn btn-lg btn-outline-secondary" href="http://localhost:5000/input-parameters" role="button">Back</a>
     </div>
 
