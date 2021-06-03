@@ -52,10 +52,10 @@ def upload_files():
             file_names.append(secure_file_name)
         pipeline = Pipeline(file_names)
         pipeline.preprocessing_of_data()
-        antennas_info = pipeline.antennas_info
-        dates = pipeline.dates_of_dfs
-        return render_template('input_genotypes.html', file_names=file_names, dates=dates,
-                               antennas_info=antennas_info)
+        return render_template('input_genotypes.html',
+                               file_names=file_names,
+                               dates=pipeline.dates_of_dfs,
+                               antennas_info=pipeline.antennas_info)
     elif request.method == 'GET' and pipeline is not None:
         file_names = pipeline.csv_files
         antennas_info = pipeline.antennas_info
@@ -71,13 +71,7 @@ def send_genotypes():
     """ Posts the data for the genotypes and returns the template for input parameters """
     if request.method == 'POST':
         genotypes = genotypes_form_to_list(request.form)
-        genotypes_debugging = [{1: "Genotype A", 3: "Genotype A", 4: "Genotype B", 6: "Genotype C", 9: "Genotype C",
-                                10: "Genotype D", 12: "Genotype D", 13: "Genotype E", 14: "Genotype E",
-                                15: "Genotype F", 16: "Genotype F"},
-                               {2: "Genotype A", 5: "Genotype A", 6: "Genotype B", 9: "Genotype A", 14: "Genotype A",
-                                15: "Genotype D", 16: "Genotype F"}]
         pipeline.input_genotypes_data(genotypes)
-        pipeline.add_genotypes_and_join_df()
         return render_template('input_parameters.html')
     elif request.method == 'GET' and pipeline is not None:
         return render_template('input_parameters.html')
@@ -96,23 +90,20 @@ def send_parameters_and_run():
                       request.form["filter_tags_by_visited_genotypes"],
                       request.form["visited_genotypes_required"].split(', '),
                       request.form["start_date_filter"], request.form["end_date_filter"]]
-        parameters_debugging = [7, "round", [], 1, "False", [], "", ""]
         pipeline.input_parameters_of_run(*parameters)
         # Run the main process of the pipeline
         pipeline.run_pipeline()
         plots = Plot(pipeline.genotypes_dfs)
         plots.lay_out_plots_to_html()
-        plots.compute_descriptive_statistics()
-        plots.dataframes_to_html_tables()
-        stats = plots.stats
-        file_names = pipeline.csv_files
-        html_tables = plots.genotypes_names
-        return render_template('pipeline_results.html', stats=stats, file_names=file_names, html_tables=html_tables)
+        return render_template('pipeline_results.html',
+                               stats=pipeline.statistics,
+                               file_names=pipeline.csv_files,
+                               html_tables=pipeline.genotypes_names)
     elif request.method == 'GET' and plots is not None:
-        stats = plots.stats
-        file_names = pipeline.csv_files
-        tables_names = plots.genotypes_names
-        return render_template('pipeline_results.html', stats=stats, file_names=file_names, tables_names=tables_names)
+        return render_template('pipeline_results.html',
+                               stats=pipeline.statistics,
+                               file_names=pipeline.csv_files,
+                               html_tables=pipeline.genotypes_names)
     else:
         return render_template('error_pipeline_results.html')
 

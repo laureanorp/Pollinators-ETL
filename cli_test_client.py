@@ -14,7 +14,6 @@ pipeline.input_genotypes_data([
      15: "Genotype F", 16: "Genotype F"},
     {2: "Genotype A", 5: "Genotype A", 6: "Genotype B", 9: "Genotype A", 14: "Genotype A",
      15: "Genotype D", 16: "Genotype F"}])
-pipeline.add_genotypes_and_join_df()
 
 # Input Parameters
 max_time_between_signals = "7"
@@ -33,12 +32,8 @@ pipeline.input_parameters_of_run(max_time_between_signals, round_or_truncate, po
 
 # Run the main process of the pipeline
 pipeline.run_pipeline()
-
-# Some outputs for testing
-print(pipeline.genotypes_dfs)
-# Export antennas_dfs to an excel file
-# pipeline_1.plot_avg_visit_duration()
-
 plots = Plot(pipeline.genotypes_dfs)
 plots.lay_out_plots_to_html()
-plots.dataframes_to_html_tables()
+
+# Print some output for testing
+print(pipeline.genotypes_dfs)
