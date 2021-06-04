@@ -24,7 +24,7 @@
 <div class="container">
     <nav class="navbar navbar-light">
         <h3 class="text-muted">RFID Pollinators</h3>
-        <a class="inline btn btn-outline-secondary" href="home" role="button">Home</a>
+        <a class="inline btn btn-outline-secondary" href="/home" role="button">Home</a>
     </nav>
     <hr class="mb-5"/>
 
@@ -161,20 +161,21 @@
     <h5 class="mt-5">Tables visualization</h5>
     <hr class="mt-0"/>
 
-    <p>This final section includes options to download and view the data tables used for the charts and statistics.</p>
+    <p>This final section includes options to download and view the data tables used for the charts and statistics.
+        <small class="text-muted">Note: "Scan Date and Time" points to the timestamp of the latest signal, not the first
+            signal.</small></p>
 
-    <div class="d-flex gap-2">
-        <a class="btn btn-outline-success" href="/exports/genotypes_tables.xlsx" role="button" download>Download
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-success mb-1" href="/download-data-excel" role="button">Download
             excel file</a>
         {% for table_name in tables_names %}
-            <a class="btn btn-outline-secondary" href="/exports/{{ table_name }}_table.html" role="button"
-               target="_blank">View
-                dataset {{ table_name }}</a>
+            <a class="btn btn-outline-secondary mb-1" href="/view-table/{{ table_name }}" role="button"
+               target="_blank">View data {{ table_name }}</a>
         {% endfor %}
     </div>
 
     <div class="d-grid gap-3 d-md-flex justify-content-md-end mb-4 mt-4">
-        <a class="btn btn-lg btn-outline-secondary" href="input-parameters" role="button">Back</a>
+        <a class="btn btn-lg btn-outline-secondary" href="/input-parameters" role="button">Back</a>
     </div>
 
     <footer class="footer">

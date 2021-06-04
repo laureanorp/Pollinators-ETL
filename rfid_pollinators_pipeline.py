@@ -287,7 +287,7 @@ class Pipeline:
 
     def _export_dataframes_to_excel(self):
         """ Exports the current genotypes_dfs to an excel file with a sheet for each dataframe """
-        with pd.ExcelWriter('exports/genotypes_tables.xlsx') as writer:
+        with pd.ExcelWriter('exports/genotypes.xlsx') as writer:
             for genotype_key in self.genotypes_dfs:
                 self.genotypes_dfs[genotype_key].to_excel(writer, sheet_name=genotype_key, index=False)
 

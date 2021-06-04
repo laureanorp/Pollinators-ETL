@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Optional
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 
 from rfid_pollinators_pipeline import Pipeline, Plot
@@ -69,7 +69,7 @@ def upload_files():
 @app.route('/input-parameters', methods=['POST', 'GET'])
 def send_genotypes():
     """ Posts the data for the genotypes and returns the template for input parameters """
-    if request.method == 'POST':
+    if request.method == 'POST' and pipeline is not None:
         genotypes = genotypes_form_to_list(request.form)
         pipeline.input_genotypes_data(genotypes)
         return render_template('input_parameters.html')
@@ -83,7 +83,7 @@ def send_genotypes():
 def send_parameters_and_run():
     """ Posts the parameters data and returns the pipeline results """
     global plots
-    if request.method == 'POST':
+    if request.method == 'POST' and pipeline is not None:
         # Introduce the parameters of the pipeline
         parameters = [request.form["max_time_between_signals"], request.form["round_or_truncate"],
                       request.form["pollinators_to_remove"].split(', '), request.form["flowers_per_antenna"],
@@ -108,6 +108,20 @@ def send_parameters_and_run():
                                tables_names=pipeline.genotypes_names)
     else:
         return render_template('error_pipeline_results.html')
+
+
+@app.route('/view-table/<name>')
+def open_html_table(name):
+    path = str('./exports/' + name + '_table.html')
+    return send_file(path)
+
+
+@app.route('/download-data-excel')
+def download_excel_file():
+    try:
+        return send_file('./exports/genotypes.xlsx')
+    except Exception as e:
+        return str(e)
 
 
 @app.errorhandler(404)
