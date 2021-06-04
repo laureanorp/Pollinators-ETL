@@ -353,6 +353,7 @@ class Plot:
     Class that includes methods for generating plots using the class Pipeline results.
     Is this collection of methods, Bokeh is used to generate HTML plots that are later included in the Flask app.
     """
+
     def __init__(self, genotypes_dfs: Dict[str, pd.DataFrame]):
         # Input for creating the initial dataframe
         self.genotypes_dfs = genotypes_dfs
@@ -373,7 +374,7 @@ class Plot:
         html = file_html(layout([
             [self._plot_visit_count_per_pollinator()],
             [self._plot_visit_duration_cumsum_per_pollinator()],
-            [self._plot_average_visit_duration_per_pollinator()],
+            [self._plot_average_visit_duration_per_pollinator()]
         ]), CDN)
         with open("templates/charts_per_pollinator.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
@@ -402,7 +403,8 @@ class Plot:
         sorted_genotypes = sorted(genotypes, key=lambda x: visits[genotypes.index(x)])
         plot = figure(x_range=sorted_genotypes, plot_height=400, title="Number of visits per genotype",
                       tools="pan, wheel_zoom, box_zoom, reset, save",
-                      tooltips=[("Genotype", "@genotypes"), ("Total visits", "@visits")], toolbar_sticky=False)
+                      tooltips=[("Genotype", "@genotypes"), ("Total visits", "@visits")], toolbar_sticky=False,
+                      margin=(30, 0, 30, 0))
         plot.vbar(x="genotypes", top="visits", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
@@ -428,7 +430,7 @@ class Plot:
             data[pollinator] = list_of_data
         plot = figure(x_range=genotypes, plot_height=400, title="Total duration (sum) of all visits per genotype",
                       tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="Pollinator $name: @$name sec",
-                      toolbar_sticky=False)
+                      toolbar_sticky=False, margin=(15, 0, 15, 0))
         plot.vbar_stack(pollinators, x='genotypes', width=0.9, color=colors, source=data)
         plot.y_range.start = 0
         plot.x_range.range_padding = 0.1
@@ -455,7 +457,8 @@ class Plot:
         sorted_genotypes = sorted(genotypes, key=lambda x: means[genotypes.index(x)])
         plot = figure(x_range=sorted_genotypes, plot_height=400, title="Average duration of visits per genotype",
                       tools="pan, wheel_zoom, box_zoom, reset, save",
-                      tooltips=[("Genotype", "@genotypes"), ("Average visit (sec)", "@means")], toolbar_sticky=False)
+                      tooltips=[("Genotype", "@genotypes"), ("Average visit (sec)", "@means")], toolbar_sticky=False,
+                      margin=(30, 0, 30, 0))
         plot.vbar(x="genotypes", top="means", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
@@ -479,7 +482,8 @@ class Plot:
         sorted_pollinators = sorted(pollinators, key=lambda x: visits[pollinators.index(x)])
         plot = figure(x_range=sorted_pollinators, plot_height=400, title="Number of visits of each pollinator",
                       tools="pan, wheel_zoom, box_zoom, reset, save",
-                      tooltips=[("Pollinator", "@pollinators"), ("Total visits", "@visits")], toolbar_sticky=False)
+                      tooltips=[("Pollinator", "@pollinators"), ("Total visits", "@visits")], toolbar_sticky=False,
+                      margin=(30, 0, 30, 0))
         plot.vbar(x="pollinators", top="visits", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
@@ -503,7 +507,7 @@ class Plot:
         plot = figure(x_range=pollinators, plot_height=400, title="Average duration of visits per pollinator",
                       tools="pan, wheel_zoom, box_zoom, reset, save",
                       tooltips=[("Pollinator", "@pollinators"), ("Average visit (sec)", "@means")],
-                      toolbar_sticky=False)
+                      toolbar_sticky=False, margin=(15, 0, 15, 0))
         plot.vbar(x="pollinators", top="means", width=0.9, source=source, color="color")
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
@@ -529,7 +533,7 @@ class Plot:
             data[genotype] = list_of_data
         plot = figure(x_range=pollinators, plot_height=400, title="Total duration (sum) of all visits per pollinator",
                       tools="pan, wheel_zoom, box_zoom, reset, save", tooltips="@pollinators on $name: @$name sec",
-                      toolbar_sticky=False)
+                      toolbar_sticky=False, margin=(15, 0, 15, 0))
         plot.vbar_stack(genotypes, x='pollinators', width=0.9, color=colors, source=data,
                         legend_label=genotypes)
         plot.y_range.start = 0
@@ -563,7 +567,8 @@ class Plot:
             mode='vline',
         )
         plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by hour",
-                      tools=[custom_tooltips, "pan, wheel_zoom, box_zoom, reset, save"], toolbar_sticky=False)
+                      tools=[custom_tooltips, "pan, wheel_zoom, box_zoom, reset, save"], toolbar_sticky=False,
+                      margin=(30, 0, 30, 0))
         plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
         plot.xaxis.axis_label = "Date & time"
         plot.yaxis.axis_label = "Number of visits"
@@ -583,7 +588,7 @@ class Plot:
                 'visits_count': y}
         source = ColumnDataSource(data=data)
         plot = figure(plot_height=400, x_axis_type="datetime", title="Evolution of visits grouped by day",
-                      tools="pan, wheel_zoom, box_zoom, reset, save", toolbar_sticky=False)
+                      tools="pan, wheel_zoom, box_zoom, reset, save", toolbar_sticky=False, margin=(15, 0, 15, 0))
         plot.vbar(x='dates', top='visits_count', color="#168756", line_alpha=0.25, fill_alpha=0.25,
                   width=timedelta(days=0.5), source=source)
         lines = plot.line(x='dates', y='visits_count', line_width=2, line_color="#168756", source=source)
