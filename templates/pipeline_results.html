@@ -31,11 +31,8 @@
     <div class="jumbotron">
         <h1>Results</h1>
         <p class="lead">Experiment(s) used on this process: <strong>{{ file_names|join(', ') }}</strong>. After applying
-            all the filters
-            and tasks, this data includes a total
-            of <strong>{{ stats["pollinators_count"] }} pollinators</strong>, with
-            <strong>{{ stats["genotypes_count"] }} genotypes</strong> to visit. Graphical
-            results, key information and tables can be found on the following sections.</p>
+            all the filters and tasks, this data includes a total of <strong>{{ stats["pollinators_count"] }}
+                pollinators</strong> and <strong>{{ stats["genotypes_count"] }} genotypes</strong> visited.</p>
     </div>
 
     <h5 class="mt-5">Visits statistics</h5>
@@ -64,12 +61,22 @@
         </table>
     </div>
 
-
-    <h5 class="mt-5">Interactive charts</h5>
+    <h5 class="mt-5">Interactive charts per genotype</h5>
     <hr class="mt-0"/>
-
     <div class="row">
-        {% include 'layout.html' %}
+        {% include 'charts_per_genotype.html' %}
+    </div>
+
+    <h5 class="mt-5">Interactive charts per pollinator</h5>
+    <hr class="mt-0"/>
+    <div class="row">
+        {% include 'charts_per_pollinator.html' %}
+    </div>
+
+    <h5 class="mt-5">Evolution of the number of visits</h5>
+    <hr class="mt-0"/>
+    <div class="row">
+        {% include 'evolution_charts.html' %}
     </div>
 
     <h5 class="mt-5">T-test for visit duration average</h5>
@@ -160,7 +167,8 @@
         <a class="btn btn-outline-success" href="/exports/genotypes_tables.xlsx" role="button" download>Download
             excel file</a>
         {% for table_name in tables_names %}
-             <a class="btn btn-outline-secondary" href="/exports/{{ table_name }}_table.html" role="button" target="_blank">View
+            <a class="btn btn-outline-secondary" href="/exports/{{ table_name }}_table.html" role="button"
+               target="_blank">View
                 dataset {{ table_name }}</a>
         {% endfor %}
     </div>

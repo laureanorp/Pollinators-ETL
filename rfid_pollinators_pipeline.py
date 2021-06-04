@@ -353,7 +353,6 @@ class Plot:
     Class that includes methods for generating plots using the class Pipeline results.
     Is this collection of methods, Bokeh is used to generate HTML plots that are later included in the Flask app.
     """
-
     def __init__(self, genotypes_dfs: Dict[str, pd.DataFrame]):
         # Input for creating the initial dataframe
         self.genotypes_dfs = genotypes_dfs
@@ -361,22 +360,35 @@ class Plot:
         self.final_joined_df = pd.concat(dataframes)
 
     def lay_out_plots_to_html(self):
-        """ Saves all the plots generated in this Class to one HTML file with a certain layout"""
+        """ Saves all the plots generated in this Class to different HTML file with a certain layout"""
         html = file_html(layout([
-            [self._plot_visits_per_genotype()],
-            [self._plot_visits_cumsum_per_genotype()],
-            [self._plot_visit_duration_per_genotype()],
-            [self._plot_visit_duration_per_pollinator()],
-            [self._plot_visit_cumsum_per_pollinator()],
-            [self._plot_visit_evolution_per_hour()],
-            [self._plot_visit_evolution_per_day()],
+            [self._plot_visit_count_per_genotype()],
+            [self._plot_visit_duration_cumsum_per_genotype()],
+            [self._plot_average_visit_duration_per_genotype()]
         ]), CDN)
-        with open("templates/layout.html", "w+") as file_handler:
+        with open("templates/charts_per_genotype.html", "w+") as file_handler:
             file_handler.write("{% raw %}")  # avoid Jinja2 having problems with bokeh date formatters as "{%H"
             file_handler.write(html)
             file_handler.write("{% endraw %}")
+        html = file_html(layout([
+            [self._plot_visit_count_per_pollinator()],
+            [self._plot_visit_duration_cumsum_per_pollinator()],
+            [self._plot_average_visit_duration_per_pollinator()],
+        ]), CDN)
+        with open("templates/charts_per_pollinator.html", "w+") as file_handler:
+            file_handler.write("{% raw %}")
+            file_handler.write(html)
+            file_handler.write("{% endraw %}")
+        html = file_html(layout([
+            [self._plot_visit_evolution_per_hour()],
+            [self._plot_visit_evolution_per_day()]
+        ]), CDN)
+        with open("templates/evolution_charts.html", "w+") as file_handler:
+            file_handler.write("{% raw %}")
+            file_handler.write(html)
+            file_handler.write("{% endraw %}")
 
-    def _plot_visits_per_genotype(self):
+    def _plot_visit_count_per_genotype(self):
         """ Returns a plot with the total number visits for each genotype """
         genotypes = []
         visits = []
@@ -400,7 +412,7 @@ class Plot:
         plot.yaxis.axis_label = "Number of visits"
         return plot
 
-    def _plot_visits_cumsum_per_genotype(self):
+    def _plot_visit_duration_cumsum_per_genotype(self):
         """ Returns a plot with the total duration of all visits for each genotype """
         pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         genotypes = self.final_joined_df['Genotype'].unique().tolist()
@@ -429,7 +441,7 @@ class Plot:
         plot.yaxis.axis_label = "Total time of visits"
         return plot
 
-    def _plot_visit_duration_per_genotype(self):
+    def _plot_average_visit_duration_per_genotype(self):
         """ Returns a plot with the average visit duration for each genotype """
         genotypes = []
         means = []
@@ -453,7 +465,31 @@ class Plot:
         plot.yaxis.axis_label = "Average visit duration"
         return plot
 
-    def _plot_visit_duration_per_pollinator(self):
+    def _plot_visit_count_per_pollinator(self):
+        """Returns a plot with the total number visits of each pollinator"""
+        pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
+        visits = []
+        for pollinator in pollinators:
+            series_for_count = self.final_joined_df[self.final_joined_df['Tag Alias'] == pollinator]
+            visits.append(len(series_for_count["Visit Duration"]))
+        data = {'pollinators': pollinators,
+                'visits': visits,
+                'color': viridis(len(pollinators))}
+        source = ColumnDataSource(data=data)
+        sorted_pollinators = sorted(pollinators, key=lambda x: visits[pollinators.index(x)])
+        plot = figure(x_range=sorted_pollinators, plot_height=400, title="Number of visits of each pollinator",
+                      tools="pan, wheel_zoom, box_zoom, reset, save",
+                      tooltips=[("Pollinator", "@pollinators"), ("Total visits", "@visits")], toolbar_sticky=False)
+        plot.vbar(x="pollinators", top="visits", width=0.9, source=source, color="color")
+        plot.xgrid.grid_line_color = None
+        plot.y_range.start = 0
+        plot.xaxis.major_label_orientation = pi / 4
+        plot.toolbar.logo = None
+        plot.xaxis.axis_label = "Pollinator"
+        plot.yaxis.axis_label = "Number of visits"
+        return plot
+
+    def _plot_average_visit_duration_per_pollinator(self):
         """ Returns a plot with the average visit duration for each pollinator """
         pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         means = []
@@ -477,7 +513,7 @@ class Plot:
         plot.yaxis.axis_label = "Average visit duration"
         return plot
 
-    def _plot_visit_cumsum_per_pollinator(self):
+    def _plot_visit_duration_cumsum_per_pollinator(self):
         """ Returns a plot with the sum of all visit durations for each pollinator """
         pollinators = self.final_joined_df['Tag Alias'].unique().tolist()
         genotypes = self.final_joined_df['Genotype'].unique().tolist()
