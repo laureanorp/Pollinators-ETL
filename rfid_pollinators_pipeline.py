@@ -103,7 +103,7 @@ class Pipeline:
         parsed_dataframes = {}
         for excel_file in self.excel_files:
             file_name = str(excel_file)
-            excel_path = "".join(["server_uploads/", excel_file])
+            excel_path = "".join(["/tmp/server_uploads/", excel_file])
             parsed_dataframes[file_name] = pd.read_excel(excel_path,
                                                          usecols=["Scan Date", "Scan Time", "Antenna ID", "DEC Tag ID"],
                                                          dtype={"Scan Date": "object", "Scan Time": "object",
@@ -112,11 +112,16 @@ class Pipeline:
 
     def _clean_up_cached_files(self):
         """Removes old files that are not going to be used on this pipeline run"""
-        for entry in os.listdir('exports'):  # removes old html/excel files
-            os.remove(os.path.join('exports', entry))
-        for entry in os.listdir('server_uploads'):  # removes input excel files
-            if entry not in self.excel_files:
-                os.remove(os.path.join('server_uploads', entry))
+        if os.path.exists('/tmp/exports'):
+            for entry in os.listdir('/tmp/exports'):  # removes old html/excel files
+                os.remove(os.path.join('/tmp/exports', entry))
+        if os.path.exists('/tmp/server_uploads'):
+            for entry in os.listdir('/tmp/server_uploads'):  # removes input excel files
+                if entry not in self.excel_files:
+                    os.remove(os.path.join('/tmp/server_uploads', entry))
+        if os.path.exists('/tmp/charts_htmls'):
+            for entry in os.listdir('/tmp/charts_htmls'):  # removes old bokeh charts files
+                os.remove(os.path.join('/tmp/charts_htmls', entry))
 
     def _export_antennas_info(self) -> Dict[str, List[str]]:
         """ Exports a dict with lists of the antennas present in each dataframe """
@@ -287,7 +292,9 @@ class Pipeline:
 
     def _export_dataframes_to_excel(self):
         """ Exports the current genotypes_dfs to an excel file with a sheet for each dataframe """
-        with pd.ExcelWriter('exports/genotypes.xlsx') as writer:
+        if not os.path.exists('/tmp/exports'):
+            os.mkdir('/tmp/exports')
+        with pd.ExcelWriter('/tmp/exports/genotypes.xlsx') as writer:
             for genotype_key in self.genotypes_dfs:
                 self.genotypes_dfs[genotype_key].to_excel(writer, sheet_name=genotype_key, index=False)
 
@@ -297,7 +304,7 @@ class Pipeline:
         for name in self.genotypes_dfs:
             html = self.genotypes_dfs[name].to_html(index=False)
             self.genotypes_names.append(name)
-            with open("exports/" + name + "_table.html", "w+") as file_handler:
+            with open("/tmp/exports/" + name + "_table.html", "w+") as file_handler:
                 file_handler.write(html)
 
     def _detect_outliers(self) -> Dict[str, int]:
@@ -362,12 +369,14 @@ class Plot:
 
     def lay_out_plots_to_html(self):
         """ Saves all the plots generated in this Class to different HTML file with a certain layout"""
+        if not os.path.exists('/tmp/charts_htmls'):
+            os.mkdir('/tmp/charts_htmls')
         html = file_html(layout([
             [self._plot_visit_count_per_genotype()],
             [self._plot_visit_duration_cumsum_per_genotype()],
             [self._plot_average_visit_duration_per_genotype()]
         ]), CDN)
-        with open("templates/charts_per_genotype.html", "w+") as file_handler:
+        with open("/tmp/charts_htmls/charts_per_genotype.html", "w+") as file_handler:
             file_handler.write("{% raw %}")  # avoid Jinja2 having problems with bokeh date formatters as "{%H"
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -376,7 +385,7 @@ class Plot:
             [self._plot_visit_duration_cumsum_per_pollinator()],
             [self._plot_average_visit_duration_per_pollinator()]
         ]), CDN)
-        with open("templates/charts_per_pollinator.html", "w+") as file_handler:
+        with open("/tmp/charts_htmls/charts_per_pollinator.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -384,7 +393,7 @@ class Plot:
             [self._plot_visit_evolution_per_hour()],
             [self._plot_visit_evolution_per_day()]
         ]), CDN)
-        with open("templates/evolution_charts.html", "w+") as file_handler:
+        with open("/tmp/charts_htmls/evolution_charts.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")

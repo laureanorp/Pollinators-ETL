@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 
 from rfid_pollinators_pipeline import Pipeline, Plot
 
-UPLOAD_FOLDER = "server_uploads"
+UPLOAD_FOLDER = "/tmp/server_uploads"
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -30,7 +30,7 @@ def genotypes_form_to_list(form_dict: Dict[str, str]) -> List[Dict[int, str]]:
     return genotypes_of_each_experiment
 
 
-@app.route('/home')
+@app.route('/')
 def home():
     """
     Main home screen for the web app.
@@ -42,6 +42,8 @@ def home():
 @app.route('/input-genotypes', methods=['POST', 'GET'])
 def upload_files():
     """ File uploader that supports multiple files """
+    if not os.path.exists('/tmp/server_uploads'):
+        os.mkdir('/tmp/server_uploads')
     file_names = []
     global pipeline
     if request.method == 'POST':
@@ -112,14 +114,14 @@ def send_parameters_and_run():
 
 @app.route('/view-table/<name>')
 def open_html_table(name):
-    path = str('./exports/' + name + '_table.html')
+    path = str('/tmp/exports/' + name + '_table.html')
     return send_file(path)
 
 
 @app.route('/download-data-excel')
 def download_excel_file():
     try:
-        return send_file('./exports/genotypes.xlsx')
+        return send_file('/tmp/exports/genotypes.xlsx')
     except Exception as e:
         return str(e)
 
