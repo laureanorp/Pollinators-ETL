@@ -114,7 +114,7 @@ def send_parameters_and_run():
 
 @app.route('/view-table/<name>')
 def open_html_table(name):
-    path = str('/tmp/exports/' + name + '_table.html')
+    path = f'/tmp/exports/{name}_table.html'
     return send_file(path)
 
 
@@ -129,6 +129,11 @@ def download_excel_file():
 @app.errorhandler(404)
 def not_found(e):
     return render_template("404.html")
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template("500.html")
 
 
 if __name__ == '__main__':
