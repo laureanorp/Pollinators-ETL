@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Optional
 
-from flask import Flask, render_template, request, send_file, send_from_directory
+from flask import Flask, render_template, request, send_file
 from werkzeug.utils import secure_filename
 
 from rfid_pollinators_pipeline import Pipeline, Plot

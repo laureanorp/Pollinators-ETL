@@ -369,14 +369,12 @@ class Plot:
 
     def lay_out_plots_to_html(self):
         """ Saves all the plots generated in this Class to different HTML file with a certain layout"""
-        if not os.path.exists('/tmp/charts_htmls'):
-            os.mkdir('/tmp/charts_htmls')
         html = file_html(layout([
             [self._plot_visit_count_per_genotype()],
             [self._plot_visit_duration_cumsum_per_genotype()],
             [self._plot_average_visit_duration_per_genotype()]
         ]), CDN)
-        with open("/tmp/charts_htmls/charts_per_genotype.html", "w+") as file_handler:
+        with open("templates/charts_per_genotype.html", "w+") as file_handler:
             file_handler.write("{% raw %}")  # avoid Jinja2 having problems with bokeh date formatters as "{%H"
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -385,7 +383,7 @@ class Plot:
             [self._plot_visit_duration_cumsum_per_pollinator()],
             [self._plot_average_visit_duration_per_pollinator()]
         ]), CDN)
-        with open("/tmp/charts_htmls/charts_per_pollinator.html", "w+") as file_handler:
+        with open("templates/charts_per_pollinator.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -393,7 +391,7 @@ class Plot:
             [self._plot_visit_evolution_per_hour()],
             [self._plot_visit_evolution_per_day()]
         ]), CDN)
-        with open("/tmp/charts_htmls/evolution_charts.html", "w+") as file_handler:
+        with open("templates/evolution_charts.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")
