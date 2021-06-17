@@ -21,14 +21,13 @@ round_or_truncate = "round"
 filter_tags_by_visited_genotypes = "False"
 pollinators_to_remove = []
 visited_genotypes_required = ""
-flowers_per_antenna = "7"
 filter_start_datetime = ""
 filter_end_datetime = ""
 
 # Send parameters
 pipeline.input_parameters_of_run(max_time_between_signals, round_or_truncate, pollinators_to_remove,
-                                 flowers_per_antenna, filter_tags_by_visited_genotypes, visited_genotypes_required,
-                                 filter_start_datetime, filter_end_datetime)
+                                 filter_tags_by_visited_genotypes, visited_genotypes_required, filter_start_datetime,
+                                 filter_end_datetime)
 
 # Run the main process of the pipeline
 pipeline.run_pipeline()

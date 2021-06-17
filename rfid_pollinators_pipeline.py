@@ -42,7 +42,6 @@ class Pipeline:
         self.genotypes_dfs = None
         self.df = None
         # Parameters for results and statistics
-        self.flowers_per_antenna = None
         self.final_joined_df = None
         self.statistics = None
         self.genotypes_names = None
@@ -58,9 +57,9 @@ class Pipeline:
         self.genotypes_of_each_experiment = genotypes_of_each_experiment
 
     def input_parameters_of_run(self, max_time_between_signals: str, round_or_truncate: str,
-                                pollinators_to_remove: List[str], flowers_per_antenna: str,
-                                filter_tags_by_visited_genotypes: str, visited_genotypes_required=None,
-                                filter_start_datetime: str = "", filter_end_datetime: str = ""):
+                                pollinators_to_remove: List[str], filter_tags_by_visited_genotypes: str,
+                                visited_genotypes_required=None, filter_start_datetime: str = "",
+                                filter_end_datetime: str = ""):
         """Method for introducing all the necessary parameters for the pipeline run"""
         if visited_genotypes_required is None:
             visited_genotypes_required = []
@@ -71,7 +70,6 @@ class Pipeline:
         self.filter_tags_by_visited_genotypes = filter_tags_by_visited_genotypes
         self.visited_genotypes_required = visited_genotypes_required
         self.pollinators_to_remove = pollinators_to_remove
-        self.flowers_per_antenna = int(flowers_per_antenna)
 
     def run_pipeline(self):
         """Main function of the class, runs all the pipeline steps"""
@@ -82,7 +80,6 @@ class Pipeline:
         self._assign_aliases_for_pollinators()
         self.df = self.df_with_genotypes.copy()
         self._remove_pollinators_manually(self.pollinators_to_remove)
-        self._remove_unused_columns()
         # Create a list of unique Tag IDs to use in other functions
         all_tag_ids = self.df['DEC Tag ID'].unique().tolist()
         # Create dataframes for each genotype
@@ -119,9 +116,6 @@ class Pipeline:
             for entry in os.listdir('/tmp/server_uploads'):  # removes input excel files
                 if entry not in self.excel_files:
                     os.remove(os.path.join('/tmp/server_uploads', entry))
-        if os.path.exists('/tmp/charts_htmls'):
-            for entry in os.listdir('/tmp/charts_htmls'):  # removes old bokeh charts files
-                os.remove(os.path.join('/tmp/charts_htmls', entry))
 
     def _export_antennas_info(self) -> Dict[str, List[str]]:
         """ Exports a dict with lists of the antennas present in each dataframe """
@@ -132,6 +126,7 @@ class Pipeline:
         return antennas_of_each_dataframe
 
     def _export_dates_info(self) -> Dict[str, List[str]]:
+        """ Exports a dict with the start and end date of each experiment """
         dates_of_dfs = {}
         for file_name in self.parsed_dataframes:
             dates_of_dfs[file_name] = [self.parsed_dataframes[file_name]['Scan Date'].iloc[0],
@@ -173,10 +168,6 @@ class Pipeline:
         if pollinators_to_remove:
             self.df = self.df[~self.df['DEC Tag ID'].isin(pollinators_to_remove)]
 
-    def _remove_unused_columns(self):
-        """Removes unused columns in the dataframe"""
-        self.df = self.df[['Scan Date', 'Scan Time', 'DEC Tag ID', 'Tag Alias', 'Antenna ID', 'Genotype']]
-
     def _create_dict_of_genotypes_dfs(self) -> Dict[str, pd.DataFrame]:
         """
         Create a dictionary with "n" dataframes, being "n" the number of different genotypes on the data.
@@ -213,7 +204,7 @@ class Pipeline:
             # Filter dataframe values by removing those "not good" tag IDs
             if self.filter_tags_by_visited_genotypes == "True":
                 genotype_df = genotype_df[genotype_df['DEC Tag ID'].isin(self.list_of_good_visitors)]
-            # Parse scan dates and times manually after reading the CSV
+            # Parse scan dates and times manually after reading the Excel file
             genotype_df['Scan Date and Time'] = pd.to_datetime(genotype_df['Scan Date'] + ' '
                                                                + genotype_df['Scan Time'],
                                                                format="%d/%m/%Y %H:%M:%S.%f")
@@ -248,14 +239,13 @@ class Pipeline:
 
     def _calculate_visit_duration(self, genotype_df: pd.DataFrame) -> pd.DataFrame:
         """ Calculates the duration of the visits of pollinators in each genotype """
-
         # Sort using DEC Tag ID so time delta is correctly calculated
         genotype_df = genotype_df.sort_values(by=['DEC Tag ID', 'Scan Date and Time'])
         # Calculate time delta by subtracting "Scan Time" rows
         genotype_df['Time Delta'] = (genotype_df['Scan Date and Time'] -
                                      genotype_df['Scan Date and Time'].shift(1)).astype('timedelta64[s]')
         # Calculate which individual visits are valid and their durations
-        # It has to be the same Tag ID and a visit between 1 and 7 seconds
+        # It has to be the same Tag ID and a visit between 1 and the desired number of seconds
         genotype_df['Valid Visits'] = 0
         genotype_df['Valid Visits'] = np.where((genotype_df['Time Delta'] > 0) &
                                                (genotype_df['Time Delta'] <= self.max_time_between_signals) &
@@ -263,12 +253,10 @@ class Pipeline:
                                                genotype_df['Time Delta'], 0)
         # Stopper: 1 when the running summation has to stop
         genotype_df['Visit Stopper'] = np.where(genotype_df['Valid Visits'] == 0, 1, 0)
-
         # Sum the duration of the individual visits to find the total
         sum_duration = genotype_df.groupby(genotype_df['Visit Stopper'].shift(fill_value=0)
                                            .cumsum())['Valid Visits'].transform('sum')
         genotype_df['Visit Duration'] = np.where(genotype_df['Visit Stopper'] == 1, sum_duration, 0)
-
         # Shift up al rows so the visit duration is in line with the correct Tag ID
         genotype_df['Visit Duration'] = genotype_df['Visit Duration'].shift(-1)
         # Drop unnecessary columns used for the calculations only
@@ -374,7 +362,7 @@ class Plot:
             [self._plot_visit_duration_cumsum_per_genotype()],
             [self._plot_average_visit_duration_per_genotype()]
         ]), CDN)
-        with open("templates/charts_per_genotype.html", "w+") as file_handler:
+        with open("/tmp/templates/charts_per_genotype.html", "w+") as file_handler:
             file_handler.write("{% raw %}")  # avoid Jinja2 having problems with bokeh date formatters as "{%H"
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -383,7 +371,7 @@ class Plot:
             [self._plot_visit_duration_cumsum_per_pollinator()],
             [self._plot_average_visit_duration_per_pollinator()]
         ]), CDN)
-        with open("templates/charts_per_pollinator.html", "w+") as file_handler:
+        with open("/tmp/templates/charts_per_pollinator.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")
@@ -391,7 +379,7 @@ class Plot:
             [self._plot_visit_evolution_per_hour()],
             [self._plot_visit_evolution_per_day()]
         ]), CDN)
-        with open("templates/evolution_charts.html", "w+") as file_handler:
+        with open("/tmp/templates/evolution_charts.html", "w+") as file_handler:
             file_handler.write("{% raw %}")
             file_handler.write(html)
             file_handler.write("{% endraw %}")
