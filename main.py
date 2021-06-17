@@ -12,10 +12,10 @@ def copy_templates_to_temp():
     """ Copies the original templates to /tmp so results can be written to that folder in production"""
     try:
         os.mkdir('/tmp/templates')
-        for file in os.listdir('templates'):
-            copy(f'templates/{file}', '/tmp/templates')
     except FileExistsError:
         pass
+    for file in os.listdir('templates'):
+        copy(f'templates/{file}', '/tmp/templates')
 
 
 copy_templates_to_temp()
