@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from rfid_pollinators_pipeline import Pipeline, Plot
 
 
-def copy_templates_to_temp():
+def create_tmp_folders_for_templates():
     """ Copies the original templates to /tmp so results can be written to that folder in production"""
     try:
         os.mkdir('/tmp/templates')
@@ -16,9 +16,12 @@ def copy_templates_to_temp():
         pass
     for file in os.listdir('templates'):
         copy(f'templates/{file}', '/tmp/templates')
+    # Creates the folder for uploading files
+    if not os.path.exists('/tmp/server_uploads'):
+        os.mkdir('/tmp/server_uploads')
 
 
-copy_templates_to_temp()
+create_tmp_folders_for_templates()
 
 UPLOAD_FOLDER = "/tmp/server_uploads"
 
@@ -60,11 +63,9 @@ def upload_files():
     Initializes the pipeline Class and executes some pre-processing functions.
     Returns the next screen of the app: Input Parameters.
     """
-    if not os.path.exists('/tmp/server_uploads'):
-        os.mkdir('/tmp/server_uploads')
-    file_names = []
     global pipeline
     if request.method == 'POST':
+        file_names = []
         excel_files = request.files.getlist('excel_files')
         for file in excel_files:
             secure_file_name = secure_filename(file.filename)
