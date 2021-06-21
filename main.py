@@ -63,7 +63,6 @@ def upload_files():
     Initializes the pipeline Class and executes some pre-processing functions.
     Returns the next screen of the app: Input Parameters.
     """
-    global pipeline
     if request.method == 'POST':
         file_names = []
         excel_files = request.files.getlist('excel_files')
@@ -71,16 +70,16 @@ def upload_files():
             secure_file_name = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_file_name))
             file_names.append(secure_file_name)
-        pipeline = Pipeline(file_names)
-        pipeline.preprocessing_of_data()
+        upload_files.pipeline = Pipeline(file_names)
+        upload_files.pipeline.preprocessing_of_data()
         return render_template('input_genotypes.html',
                                file_names=file_names,
-                               dates=pipeline.dates_of_dfs,
-                               antennas_info=pipeline.antennas_info)
-    elif request.method == 'GET' and pipeline is not None:
-        file_names = pipeline.excel_files
-        antennas_info = pipeline.antennas_info
-        dates = pipeline.dates_of_dfs
+                               dates=upload_files.pipeline.dates_of_dfs,
+                               antennas_info=upload_files.pipeline.antennas_info)
+    elif request.method == 'GET' and upload_files.pipeline is not None:
+        file_names = upload_files.pipeline.excel_files
+        antennas_info = upload_files.pipeline.antennas_info
+        dates = upload_files.pipeline.dates_of_dfs
         return render_template('input_genotypes.html', file_names=file_names, dates=dates,
                                antennas_info=antennas_info)
     else:
@@ -92,9 +91,9 @@ def send_genotypes():
     """ Posts the data for the genotypes and returns the template for Input Parameters """
     if request.method == 'POST':
         genotypes = genotypes_form_to_list(request.form)
-        pipeline.input_genotypes_data(genotypes)
+        upload_files.pipeline.input_genotypes_data(genotypes)
         return render_template('input_parameters.html')
-    elif request.method == 'GET' and pipeline is not None and pipeline.genotypes_of_each_experiment is not None:
+    elif request.method == 'GET' and upload_files.pipeline is not None and upload_files.pipeline.genotypes_of_each_experiment is not None:
         return render_template('input_parameters.html')
     else:
         return render_template('error_input_parameters.html')
@@ -111,22 +110,22 @@ def send_parameters_and_run():
                       request.form["filter_tags_by_visited_genotypes"],
                       request.form["visited_genotypes_required"].split(', '),
                       request.form["start_date_filter"], request.form["end_date_filter"]]
-        pipeline.input_parameters_of_run(*parameters)
+        upload_files.pipeline.input_parameters_of_run(*parameters)
         # Run the main process of the pipeline
-        pipeline.run_pipeline()
-        plots = Plot(pipeline.genotypes_dfs)
+        upload_files.pipeline.run_pipeline()
+        plots = Plot(upload_files.pipeline.genotypes_dfs)
         plots.lay_out_plots_to_html()
         return render_template('pipeline_results.html',
-                               stats=pipeline.statistics,
-                               file_names=pipeline.excel_files,
-                               pollinators_alias=pipeline.pollinators_aliases,
-                               tables_names=pipeline.genotypes_names)
+                               stats=upload_files.pipeline.statistics,
+                               file_names=upload_files.pipeline.excel_files,
+                               pollinators_alias=upload_files.pipeline.pollinators_aliases,
+                               tables_names=upload_files.pipeline.genotypes_names)
     elif request.method == 'GET' and plots is not None:
         return render_template('pipeline_results.html',
-                               stats=pipeline.statistics,
-                               file_names=pipeline.excel_files,
-                               pollinators_alias=pipeline.pollinators_aliases,
-                               tables_names=pipeline.genotypes_names)
+                               stats=upload_files.pipeline.statistics,
+                               file_names=upload_files.pipeline.excel_files,
+                               pollinators_alias=upload_files.pipeline.pollinators_aliases,
+                               tables_names=upload_files.pipeline.genotypes_names)
     else:
         return render_template('error_pipeline_results.html')
 
