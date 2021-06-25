@@ -101,11 +101,9 @@ def send_genotypes():
         serialize_pipeline(pipeline)
         return render_template('input_parameters.html')
     elif request.method == 'GET' and is_pipeline_present():
-        pipeline = deserialize_pipeline()
-        if pipeline.genotypes_of_each_experiment is not None:
-            return render_template('input_parameters.html')
-        else:
-            return render_template('error_input_parameters.html')
+        return render_template('input_parameters.html')
+    else:
+        return render_template('error_input_parameters.html')
 
 
 @app.route('/view-results', methods=['POST', 'GET'])
