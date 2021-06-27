@@ -5,7 +5,8 @@ from typing import List, Dict
 from flask import Flask, render_template, request, send_file
 from werkzeug.utils import secure_filename
 
-from pipeline_utilities import deserialize_pipeline, is_pipeline_present, are_plots_files_present, serialize_pipeline
+from pipeline_utilities import download_and_deserialize_pipeline_from_gcs, is_pipeline_present, are_plots_files_present, \
+    serialize_and_upload_pipeline_to_gcs, delete_pipeline_file
 from rfid_pollinators_pipeline import Pipeline, Plot
 
 UPLOAD_FOLDER = "/tmp/server_uploads"
@@ -55,7 +56,9 @@ def home():
     """
     Main home screen for the web app.
     Returns the HTMl template where the Excel files are uploaded.
+    Resets the pipeline by deleting the pkl file form Google Cloud Storage.
     """
+    delete_pipeline_file()
     return render_template('home.html')
 
 
@@ -75,13 +78,13 @@ def upload_files():
             file_names.append(secure_file_name)
         pipeline = Pipeline(file_names)
         pipeline.preprocessing_of_data()
-        serialize_pipeline(pipeline)
+        serialize_and_upload_pipeline_to_gcs(pipeline)
         return render_template('input_genotypes.html',
                                file_names=file_names,
                                dates=pipeline.dates_of_dfs,
                                antennas_info=pipeline.antennas_info)
     elif request.method == 'GET' and is_pipeline_present():
-        pipeline = deserialize_pipeline()
+        pipeline = download_and_deserialize_pipeline_from_gcs()
         file_names = pipeline.excel_files
         antennas_info = pipeline.antennas_info
         dates = pipeline.dates_of_dfs
@@ -95,10 +98,10 @@ def upload_files():
 def send_genotypes():
     """ Posts the data for the genotypes and returns the template for Input Parameters """
     if request.method == 'POST' and is_pipeline_present():
-        pipeline = deserialize_pipeline()
+        pipeline = download_and_deserialize_pipeline_from_gcs()
         genotypes = genotypes_form_to_list(request.form)
         pipeline.input_genotypes_data(genotypes)
-        serialize_pipeline(pipeline)
+        serialize_and_upload_pipeline_to_gcs(pipeline)
         return render_template('input_parameters.html')
     elif request.method == 'GET' and is_pipeline_present():
         return render_template('input_parameters.html')
@@ -116,20 +119,20 @@ def send_parameters_and_run():
                       request.form["filter_tags_by_visited_genotypes"],
                       request.form["visited_genotypes_required"].split(', '),
                       request.form["start_date_filter"], request.form["end_date_filter"]]
-        pipeline = deserialize_pipeline()
+        pipeline = download_and_deserialize_pipeline_from_gcs()
         pipeline.input_parameters_of_run(*parameters)
         # Run the main process of the pipeline
         pipeline.run_pipeline()
         plots = Plot(pipeline.genotypes_dfs)
         plots.lay_out_plots_to_html()
-        serialize_pipeline(pipeline)
+        serialize_and_upload_pipeline_to_gcs(pipeline)
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
                                file_names=pipeline.excel_files,
                                pollinators_alias=pipeline.pollinators_aliases,
                                tables_names=pipeline.genotypes_names)
     elif request.method == 'GET' and is_pipeline_present() and are_plots_files_present():
-        pipeline = deserialize_pipeline()
+        pipeline = download_and_deserialize_pipeline_from_gcs()
         return render_template('pipeline_results.html',
                                stats=pipeline.statistics,
                                file_names=pipeline.excel_files,
