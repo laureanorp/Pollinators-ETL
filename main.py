@@ -58,7 +58,8 @@ def home():
     Returns the HTMl template where the Excel files are uploaded.
     Resets the pipeline by deleting the pkl file form Google Cloud Storage.
     """
-    delete_pipeline_file()
+    if is_pipeline_present():
+        delete_pipeline_file()
     return render_template('home.html')
 
 
