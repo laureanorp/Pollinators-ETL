@@ -8,7 +8,7 @@ PIPELINE_BLOB_NAME = 'pipeline.pkl'
 GCS_BUCKET = 'rfid-pollinators.appspot.com'
 PIPELINE_PKL_LOCAL_PATH = '/tmp/pipeline.pkl'
 
-CREDENTIAL_PATH = "rfid-pollinators-afa7543856fe.json"
+CREDENTIAL_PATH = "rfid-pollinators-d0c96f9c8ef9.json"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIAL_PATH
 
 
