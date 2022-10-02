@@ -1,5 +1,7 @@
 # RFID Pollinators Pipeline
 
+<img width="200" alt="logo" src="https://user-images.githubusercontent.com/14150766/193466545-ec3239bc-d061-43ff-a9d4-fcce0bad55a8.png">
+
 RFID Pollinators is a Python web application for processing certain experimental data from Biomark(R) RFID systems. It consists on a data-processing pipeline made with pandas + Bokeh and a web app using Flask and Bootstrap. Right now this app is deployed to Google App Engine, available [on this link](https://rfid-pollinators.ew.r.appspot.com).
 
 <img width="800" alt="image" src="https://user-images.githubusercontent.com/14150766/193462330-cfb027e1-0b3b-46e8-8eeb-859e4fe178b4.png">
