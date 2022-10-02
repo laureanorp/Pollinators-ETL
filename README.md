@@ -2,11 +2,17 @@
 
 RFID Pollinators is a Python web application for processing certain experimental data from Biomark(R) RFID systems. It consists on a data-processing pipeline made with pandas + Bokeh and a web app using Flask and Bootstrap. Right now this app is deployed to Google App Engine, available [on this link](https://rfid-pollinators.ew.r.appspot.com).
 
+<img width="800" alt="image" src="https://user-images.githubusercontent.com/14150766/193462330-cfb027e1-0b3b-46e8-8eeb-859e4fe178b4.png">
+
 ## More background on the project
 
-Inside a controlled environment, bumblebees (pollinators) marked with passive RFID tags interact with different plants. Those plants have RFID antennas that detect the bumblebees when they are close. Those signals are registered by Biomark(R) software are and saved into an Excel file.
+Inside a controlled environment, bumblebees (pollinators) marked with passive RFID tags interact with different plants. Those plants have RFID antennas that detect the bumblebees when they are close. Those signals are registered by Biomark(R) RFID reader, passed into the reader software, and saved into an Excel file.
+
+![Invernadero](https://user-images.githubusercontent.com/14150766/193462279-e78cc507-4610-40a4-9f45-b8e7126d11d4.png)
 
 Those excel files are the input of this application. Information of individual signals (one pollinator on one antenna on a timestamp) is converted to a "visit" with a certain duration. The user can control the different parameters which affect the results, as well as deciding which plants form different groups depending of its genotype. So, the final result if grouped by genotypes. Plenty of processing is made to the data, so the final result is a dictionary of pandas dataframes, where each dataframe corresponds to a different genotype and includes all the visits of those antennas.
+
+![Pipeline ETL](https://user-images.githubusercontent.com/14150766/193462285-f50e3466-18f1-4031-ab43-b50be162ecdc.png)
 
 ## Run the project locally
 
