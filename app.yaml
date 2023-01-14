@@ -17,7 +17,7 @@ runtime: python39
 instance_class: F4
 
 env_variables:
-  BUCKET_NAME: "rfid-pollinators.appspot.com"
+  BUCKET_NAME: "rfid-pollinators-2.appspot.com"
 
 entrypoint: gunicorn -b :$PORT main:app
 

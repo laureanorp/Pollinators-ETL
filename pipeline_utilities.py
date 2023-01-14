@@ -5,10 +5,10 @@ from rfid_pollinators_pipeline import Pipeline
 from google.cloud import storage
 
 PIPELINE_BLOB_NAME = 'pipeline.pkl'
-GCS_BUCKET = 'rfid-pollinators.appspot.com'
+GCS_BUCKET = 'rfid-pollinators-2.appspot.com'
 PIPELINE_PKL_LOCAL_PATH = '/tmp/pipeline.pkl'
 
-CREDENTIAL_PATH = "rfid-pollinators-d0c96f9c8ef9.json"
+CREDENTIAL_PATH = "gcs_credential.json"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIAL_PATH
 
 
@@ -26,7 +26,7 @@ def serialize_and_upload_pipeline_to_gcs(pipeline):
 def download_and_deserialize_pipeline_from_gcs() -> Pipeline:
     """ Downloads the pipeline file form GCS bucket and returns the deserialized object """
     storage_client = storage.Client()
-    bucket = storage_client.bucket('rfid-pollinators.appspot.com')
+    bucket = storage_client.bucket(GCS_BUCKET)
     blob = bucket.blob(PIPELINE_BLOB_NAME)
     blob.download_to_filename(PIPELINE_PKL_LOCAL_PATH)
 
