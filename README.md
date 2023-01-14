@@ -2,7 +2,7 @@
 
 <img width="200" alt="logo" src="https://user-images.githubusercontent.com/14150766/193466545-ec3239bc-d061-43ff-a9d4-fcce0bad55a8.png">
 
-RFID Pollinators is a Python web application for processing certain experimental data from Biomark(R) RFID systems. It consists on a data-processing pipeline made with pandas + Bokeh and a web app using Flask and Bootstrap. Right now this app is deployed to Google App Engine, available [on this link](https://rfid-pollinators.ew.r.appspot.com).
+RFID Pollinators is a web application for processing certain experimental data from Biomark(R) RFID systems. MAde with Python, it consists on a data-processing pipeline made with `pandas` + `Bokeh` and a web app using Flask and Bootstrap. Right now this app is deployed to Google App Engine, available [on this link](https://rfid-pollinators.ew.r.appspot.com).
 
 <img width="800" alt="image" src="https://user-images.githubusercontent.com/14150766/193462330-cfb027e1-0b3b-46e8-8eeb-859e4fe178b4.png">
 
@@ -12,7 +12,7 @@ Inside a controlled environment, bumblebees (pollinators) marked with passive RF
 
 ![Invernadero](https://user-images.githubusercontent.com/14150766/193462279-e78cc507-4610-40a4-9f45-b8e7126d11d4.png)
 
-Those excel files are the input of this application. Information of individual signals (one pollinator on one antenna on a timestamp) is converted to a "visit" with a certain duration. The user can control the different parameters which affect the results, as well as deciding which plants form different groups depending of its genotype. So, the final result if grouped by genotypes. Plenty of processing is made to the data, so the final result is a dictionary of pandas dataframes, where each dataframe corresponds to a different genotype and includes all the visits of those antennas.
+Those excel files are the input of this application. Information of individual signals (one pollinator on one antenna on a timestamp) is converted to a "visit" with a certain duration. The user can control the different parameters which affect the results, as well as deciding which plants form different groups depending of its genotype. So, the final result is grouped by genotypes. Plenty of processing is made to the data, so the final result is a dictionary of pandas dataframes, where each dataframe corresponds to a different genotype and includes all the visits of those antennas.
 
 ![Pipeline ETL](https://user-images.githubusercontent.com/14150766/193462285-f50e3466-18f1-4031-ab43-b50be162ecdc.png)
 
@@ -22,12 +22,13 @@ Those excel files are the input of this application. Information of individual s
 2. Create a venv and activate it
 3. `pip install -r requirements`
 4. `python main.py`
+5. Visit http://localhost:5000 on your browser
 
 Have in mind that this application will need to write files on /tmp folder.
 
 ## Using only the pipeline
 
-If you want to use only the pipeline for making calculations, there are some useful public methods. The process is pretty much summed up in `cli_tets_client.py`. Some examples on how to interact with the pipeline:
+If you want to use only the pipeline for making calculations, there are some useful public methods. But of course, it's better to use the full app. The process is pretty much summed up in `cli_test_client.py`. Some examples on how to interact with the pipeline:
 
 ```python
 # Import the two classes
