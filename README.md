@@ -26,6 +26,26 @@ Those excel files are the input of this application. Information of individual s
 
 Have in mind that this application will need to write files on /tmp folder.
 
+## Deploying to App Engine (Google Cloud)
+
+This is suited for users with GCloud knowledge, since it requires a lot of steps. To summarize:
+1. Download this repo and extract to a local folder
+2. Create a project on Google Cloud (console.cloud.google.com), then create an app on App Engine
+3. While creating the app, it will ask you about service accounts. Create a service account and add the following permissions:
+```
+Media Asset Service Agent
+Storage Admin
+Storage Object Creator
+Storage Object Viewer
+```
+5. In the Google Cloud dashboard, go to the “Buckets” section and copy the URL of the GCS bucket
+6. On your local copy of the repo, in `app.yaml`, change the `BUCKET_NAME` variable to your bucket URL
+7. On your local copy of the repo, in `pipelines_utilities.py`, change the `GCS_BUCKET` variable to your bucket URL
+8. In the Google Cloud dashboard, go to the “Service accounts” section, click the user you created to see the details, click “Keys” and download a credential in JSON format
+9. Rename that credential to `gcs_credential.json` and move it to the project folder where the rest of the files are
+10. Download and install the gcloud SDK (cloud.google.com/sdk/docs/install-sdk). Just in case, login with `gcloud auth application-default login`
+11. Navigate to your project folder and deploy with `gcloud app deploy`
+
 ## Using only the pipeline
 
 If you want to use only the pipeline for making calculations, there are some useful public methods. But of course, it's better to use the full app. The process is pretty much summed up in `cli_test_client.py`. Some examples on how to interact with the pipeline:
