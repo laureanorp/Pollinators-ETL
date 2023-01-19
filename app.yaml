@@ -14,7 +14,7 @@
 
 runtime: python39
 
-instance_class: F4
+instance_class: F4_1G
 
 env_variables:
   BUCKET_NAME: "rfid-pollinators-2.appspot.com"
